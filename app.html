@@ -11,7 +11,7 @@
     <script src="js/preloader.js"></script>
     <!-- Connection banner -->
     <div class="conn-banner" id="connBanner">
-        ⚠️ Agente local offline — <a href="settings.html">configurar tunnel</a>
+        Agente local desconectado — <a href="settings.html">configurar tunnel</a>
     </div>
 
     <div class="app-shell">
@@ -31,10 +31,10 @@
 
             <div class="sidebar-nav">
                 <a class="sidebar-nav-item active" href="app.html">
-                    <span class="nav-icon">✏️</span> Workspace
+                    <span class="nav-icon">W</span> Workspace
                 </a>
                 <a class="sidebar-nav-item" href="settings.html">
-                    <span class="nav-icon">⚙️</span> Configurações
+                    <span class="nav-icon">S</span> Configurações
                 </a>
             </div>
 
@@ -50,7 +50,7 @@
                     <div class="sidebar-user-name" id="sidebarName">Dr. Paulo</div>
                     <div class="sidebar-user-role" id="sidebarRole">admin</div>
                 </div>
-                <button class="sidebar-logout" onclick="Auth.logout()" title="Sair">🚪</button>
+                <button class="sidebar-logout" onclick="Auth.logout()" title="Sair">Sair</button>
             </div>
         </aside>
 
@@ -66,8 +66,8 @@
                     <span class="status-badge status-offline" id="agentBadge">
                         <span id="agentBadgeIcon">●</span> <span id="agentBadgeText">offline</span>
                     </span>
-                    <button class="topbar-btn" onclick="downloadProject()" title="Baixar .txt">💾</button>
-                    <button class="topbar-btn" onclick="confirmDelete()" title="Excluir">🗑️</button>
+                    <button class="topbar-btn" onclick="downloadProject()" title="Baixar .txt">↓</button>
+                    <button class="topbar-btn" onclick="confirmDelete()" title="Excluir">×</button>
                 </div>
             </div>
 
@@ -81,17 +81,17 @@
                         <button class="ed-btn" onclick="fmt('underline')" title="Sublinhado"><u>U</u></button>
                         <span class="ed-sep"></span>
                         <button class="ed-btn" onclick="fmt('formatBlock','H2')" title="Título">H</button>
-                        <button class="ed-btn" onclick="fmt('insertUnorderedList')" title="Lista">☰</button>
+                        <button class="ed-btn" onclick="fmt('insertUnorderedList')" title="Lista">≡</button>
                         <span class="ed-sep"></span>
-                        <button class="ed-btn" onclick="copyEditorContent()" title="Copiar">📋</button>
+                        <button class="ed-btn" onclick="copyEditorContent()" title="Copiar">⎘</button>
                     </div>
                     <div class="editor-scroll">
                         <div class="editor-canvas" id="editor" contenteditable="true" oninput="autoSave()"></div>
                     </div>
                     <div class="editor-status">
                         <div class="status-group">
-                            <span>📝 <span id="wc">0</span> palavras</span>
-                            <span>⏱ ~<span id="rt">0</span> min</span>
+                            <span><span id="wc">0</span> palavras</span>
+                            <span>~<span id="rt">0</span> min leitura</span>
                         </div>
                         <div class="status-group">
                             <span id="saveIndicator">Salvo ✓</span>
@@ -102,17 +102,17 @@
                 <!-- AI Panel -->
                 <div class="ai-pane" id="aiPane">
                     <div class="ai-header">
-                        <span class="ai-header-title">🤖 Assistente IA</span>
-                        <span class="status-badge status-online" id="ragBadge" style="display:none;">📚 <span id="kbCount">0</span></span>
+                        <span class="ai-header-title">Assistente IA</span>
+                        <span class="status-badge status-online" id="ragBadge" style="display:none;">RAG · <span id="kbCount">0</span></span>
                     </div>
                     <div class="ai-body">
                         <!-- Platform -->
                         <div class="form-group">
                             <label>Plataforma</label>
                             <div class="platform-pills">
-                                <button class="pill active" data-p="youtube" onclick="pickPlatform('youtube')">▶ YouTube</button>
-                                <button class="pill" data-p="instagram" onclick="pickPlatform('instagram')">📸 Reels</button>
-                                <button class="pill" data-p="carousel" onclick="pickPlatform('carousel')">📑 Carrossel</button>
+                                <button class="pill active" data-p="youtube" onclick="pickPlatform('youtube')">YouTube</button>
+                                <button class="pill" data-p="instagram" onclick="pickPlatform('instagram')">Reels</button>
+                                <button class="pill" data-p="carousel" onclick="pickPlatform('carousel')">Carrossel</button>
                             </div>
                         </div>
                         <!-- Topic -->
@@ -125,12 +125,12 @@
                             <div class="form-group">
                                 <label>Tom</label>
                                 <select id="tone">
-                                    <option value="educativo">📚 Educativo</option>
-                                    <option value="storytelling">📖 Storytelling</option>
-                                    <option value="provocativo">🔥 Provocativo</option>
-                                    <option value="motivacional">💪 Motivacional</option>
-                                    <option value="mito_verdade">❓ Mito vs Verdade</option>
-                                    <option value="lista">📋 Lista</option>
+                                    <option value="educativo">Educativo</option>
+                                    <option value="storytelling">Storytelling</option>
+                                    <option value="provocativo">Provocativo</option>
+                                    <option value="motivacional">Motivacional</option>
+                                    <option value="mito_verdade">Mito vs Verdade</option>
+                                    <option value="lista">Lista / Tópicos</option>
                                 </select>
                             </div>
                             <div class="form-group" id="durGroup">
@@ -148,35 +148,35 @@
                         <div class="form-group">
                             <label>Sugestões rápidas</label>
                             <div class="chips">
-                                <button class="chip" onclick="setTopic('Tirzepatida para emagrecimento: o que ninguém te conta')">💊 Tirzepatida</button>
-                                <button class="chip" onclick="setTopic('Testosterona baixa: 5 sinais que todo homem ignora')">🧬 Testo</button>
-                                <button class="chip" onclick="setTopic('Fadiga crônica e exames normais: causa oculta')">⚡ Fadiga</button>
-                                <button class="chip" onclick="setTopic('Resistência à insulina e ganho de peso')">⚖️ Insulina</button>
-                                <button class="chip" onclick="setTopic('Implantes hormonais: verdade vs indústria')">💉 Implantes</button>
+                                <button class="chip" onclick="setTopic('Tirzepatida para emagrecimento: o que ninguém te conta')">Tirzepatida</button>
+                                <button class="chip" onclick="setTopic('Testosterona baixa: 5 sinais que todo homem ignora')">Testosterona</button>
+                                <button class="chip" onclick="setTopic('Fadiga crônica e exames normais: causa oculta')">Fadiga crônica</button>
+                                <button class="chip" onclick="setTopic('Resistência à insulina e ganho de peso')">Insulina</button>
+                                <button class="chip" onclick="setTopic('Implantes hormonais: verdade vs indústria')">Implantes</button>
                             </div>
                         </div>
                         <!-- RAG toggle -->
                         <div class="toggle-row">
-                            <label>🔍 Usar base de consultas (RAG)</label>
+                            <label>Usar base de conhecimento (RAG)</label>
                             <input type="checkbox" class="toggle" id="useRag" checked>
                         </div>
                         <!-- AI Output (CodeDisplay-inspired) -->
                         <div class="ai-output-wrap" id="aiOutWrap">
                             <div class="ai-output-header">
-                                <span>📄 resultado</span>
-                                <button onclick="copyAi()">📋 Copiar</button>
+                                <span>resultado</span>
+                                <button onclick="copyAi()">Copiar</button>
                             </div>
                             <div class="ai-output" id="aiOut"></div>
                         </div>
                         <div class="ai-actions" id="aiActs">
-                            <button class="btn btn-ghost btn-sm" onclick="insertToEditor()">📥 Inserir</button>
-                            <button class="btn btn-ghost btn-sm" onclick="replaceEditor()">🔄 Substituir</button>
-                            <button class="btn btn-ghost btn-sm" onclick="copyAi()">📋 Copiar</button>
+                            <button class="btn btn-ghost btn-sm" onclick="insertToEditor()">Inserir no editor</button>
+                            <button class="btn btn-ghost btn-sm" onclick="replaceEditor()">Substituir</button>
+                            <button class="btn btn-ghost btn-sm" onclick="copyAi()">Copiar</button>
                         </div>
                     </div>
                     <div class="ai-footer">
                         <button class="btn btn-brand btn-full" id="genBtn" onclick="generate()">
-                            ⚡ Gerar script
+                            Gerar conteúdo
                         </button>
                     </div>
                 </div>
@@ -185,8 +185,8 @@
     </div>
 
     <!-- Mobile FABs -->
-    <button class="mobile-fab fab-sidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">📂</button>
-    <button class="mobile-fab fab-ai" onclick="document.getElementById('aiPane').classList.toggle('open')">🤖</button>
+    <button class="mobile-fab fab-sidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">≡</button>
+    <button class="mobile-fab fab-ai" onclick="document.getElementById('aiPane').classList.toggle('open')">IA</button>
 
     <!-- Delete modal -->
     <div class="modal-bg" id="delModal">

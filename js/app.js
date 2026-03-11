@@ -43,7 +43,7 @@ function createNewProject() {
     saveProj(p);
     openDoc(p.id);
     renderFiles();
-    toast('📄 Novo documento criado');
+    toast('Novo documento criado');
 }
 
 function openDoc(id) {
@@ -95,7 +95,7 @@ function renderFiles(filter) {
     }
 
     el.innerHTML = all.map(p => {
-        const icon = {youtube:'▶️',instagram:'📸',carousel:'📑'}[p.platform]||'📄';
+        const icon = {youtube:'\u25B6',instagram:'\u25CB',carousel:'\u25A1'}[p.platform]||'\u25CB';
         const badge = {youtube:'YT',instagram:'IG',carousel:'CR'}[p.platform]||'';
         const cls = {youtube:'badge-yt',instagram:'badge-ig',carousel:'badge-cr'}[p.platform]||'';
         const title = p.title || 'Sem título';
@@ -118,7 +118,7 @@ function updateMeta() {
 function updateSave(t) { document.getElementById('saveIndicator').textContent = t; }
 
 function copyEditorContent() {
-    navigator.clipboard.writeText(document.getElementById('editor').innerText).then(() => toast('📋 Copiado!'));
+    navigator.clipboard.writeText(document.getElementById('editor').innerText).then(() => toast('Copiado'));
 }
 
 function downloadProject() {
@@ -128,7 +128,7 @@ function downloadProject() {
     a.href = URL.createObjectURL(blob);
     a.download = `${title.replace(/\s+/g,'-').toLowerCase()}_${curPlat}.txt`;
     a.click();
-    toast('💾 Baixado!');
+    toast('Arquivo baixado');
 }
 
 function confirmDelete() { if (curId) document.getElementById('delModal').classList.add('show'); }
@@ -139,7 +139,7 @@ function deleteCurrentProject() {
     delProj(curId); curId = null;
     document.getElementById('docTitle').value = '';
     document.getElementById('editor').innerHTML = '';
-    renderFiles(); closeModal(); toast('🗑️ Excluído');
+    renderFiles(); closeModal(); toast('Documento excluído');
     const all = projects();
     if (all.length) openDoc(all[0].id);
 }
@@ -161,7 +161,7 @@ function setTopic(t) { document.getElementById('topic').value = t; }
 // ─── AI Generation (connected to IPagent) ───
 async function generate() {
     const topic = document.getElementById('topic').value.trim();
-    if (!topic) { toast('⚠️ Digite um tema'); return; }
+    if (!topic) { toast('Digite um tema'); return; }
     if (generating) return;
 
     const url = agentUrl(), key = apiKey();
@@ -175,7 +175,7 @@ async function generate() {
     const acts = document.getElementById('aiActs');
 
     generating = true;
-    btn.classList.add('loading'); btn.textContent = '⏳ Gerando...';
+    btn.classList.add('loading'); btn.textContent = 'Gerando...';
     wrap.classList.add('visible');
     out.innerHTML = '<span class="typing-cursor"></span>';
     acts.classList.remove('visible');
@@ -215,12 +215,12 @@ async function generate() {
             if (d.content) { full = d.content; out.textContent = full; }
             else if (d.error) out.textContent = '❌ ' + d.error;
         } catch {
-            out.textContent = '❌ Agente inacessível.\n\n1. IPagent rodando local?\n2. Tunnel (ngrok) ativo?\n3. URL configurada em Configurações?';
+            out.textContent = 'Agente inacessível.\n\n1. IPagent rodando local?\n2. Tunnel (ngrok) ativo?\n3. URL configurada em Configurações?';
         }
     }
 
     generating = false;
-    btn.classList.remove('loading'); btn.textContent = '⚡ Gerar script';
+    btn.classList.remove('loading'); btn.textContent = 'Gerar conteúdo';
     acts.classList.add('visible');
     setBadge(online ? 'online' : 'offline', online ? 'online' : 'offline');
 
@@ -235,17 +235,17 @@ function insertToEditor() {
     const t = document.getElementById('aiOut').textContent; if (!t) return;
     const ed = document.getElementById('editor');
     ed.innerHTML += (ed.innerText.trim() ? '\n\n---\n\n' : '') + t.replace(/\n/g,'<br>');
-    autoSave(); toast('📥 Inserido no editor');
+    autoSave(); toast('Inserido no editor');
 }
 
 function replaceEditor() {
     const t = document.getElementById('aiOut').textContent; if (!t) return;
     document.getElementById('editor').innerHTML = t.replace(/\n/g,'<br>');
-    autoSave(); toast('🔄 Substituído');
+    autoSave(); toast('Conteúdo substituído');
 }
 
 function copyAi() {
-    navigator.clipboard.writeText(document.getElementById('aiOut').textContent).then(() => toast('📋 Copiado!'));
+    navigator.clipboard.writeText(document.getElementById('aiOut').textContent).then(() => toast('Copiado'));
 }
 
 // ─── Agent Health ───
@@ -276,7 +276,7 @@ async function checkAgent() {
 // ─── Export / Import ───
 function exportAll() {
     const all = projects();
-    if (!all.length) { toast('⚠️ Nada para exportar'); return; }
+    if (!all.length) { toast('Nada para exportar'); return; }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(all,null,2)], {type:'application/json'}));
     a.download = `content-studio-${new Date().toISOString().slice(0,10)}.json`;
@@ -310,7 +310,7 @@ function toast(msg) {
 
 // ─── Keyboard ───
 document.addEventListener('keydown', e => {
-    if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveCurrent(); updateSave('Salvo ✓'); toast('💾 Salvo!'); }
+    if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveCurrent(); updateSave('Salvo ✓'); toast('Salvo'); }
     if ((e.ctrlKey||e.metaKey) && e.key==='n') { e.preventDefault(); createNewProject(); }
     if ((e.ctrlKey||e.metaKey) && e.key==='Enter') { e.preventDefault(); generate(); }
 });
