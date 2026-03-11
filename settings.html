@@ -4,110 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Studio — Configurações</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-    <header class="header">
-        <div class="header-brand">
-            <div class="logo">🧠</div>
-            <h1>Content Studio</h1>
-            <span class="badge">Configurações</span>
+<body style="overflow:auto;">
+    <!-- Simple topbar for settings -->
+    <div class="topbar" style="position:sticky;top:0;z-index:10;">
+        <div class="topbar-left">
+            <a href="app.html" style="color:var(--text-3);text-decoration:none;font-size:13px;">← Workspace</a>
         </div>
-        <nav class="header-nav">
-            <a href="app.html">Workspace</a>
-            <a href="settings.html" class="active">⚙️ Configurações</a>
-        </nav>
-        <div class="header-right">
-            <div class="user-menu">
-                <div class="user-avatar" id="userAvatar" onclick="toggleUserMenu()">P</div>
-                <div class="user-dropdown" id="userDropdown">
-                    <button onclick="Auth.logout()">🚪 Sair</button>
-                </div>
-            </div>
+        <div class="topbar-right">
+            <button class="btn btn-ghost btn-sm" onclick="Auth.logout()">🚪 Sair</button>
         </div>
-    </header>
+    </div>
 
-    <div class="settings-container">
-        <h2 style="font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 24px; color: var(--text-heading);">
-            ⚙️ Configurações
-        </h2>
+    <div class="settings-shell">
+        <h2>⚙️ Configurações</h2>
 
-        <!-- Agent Connection -->
-        <div class="settings-section">
-            <h3>🔗 Conexão com o Agente Local</h3>
+        <!-- Agent connection -->
+        <div class="settings-card">
+            <h3>🔗 Conexão com o Agente</h3>
             <div class="form-group">
-                <label>URL do Agente (Tunnel)</label>
+                <label>URL do Tunnel</label>
                 <input type="url" id="agentUrl" placeholder="https://xxxx.ngrok-free.app">
-                <p class="help-text">
-                    Cole aqui a URL do tunnel (ngrok ou Cloudflare) que aponta para o IPagent rodando no seu computador.
-                    <br>Se estiver testando localmente, use: <code style="color: var(--accent-primary);">http://localhost:5000</code>
-                </p>
+                <p class="help-text">Cole a URL do tunnel que aponta para o IPagent. Local: <code>http://localhost:5000</code></p>
             </div>
             <div class="form-group">
-                <label>API Key do Agente (opcional)</label>
+                <label>API Key (opcional)</label>
                 <input type="text" id="apiKey" placeholder="sk-IPagent-...">
-                <p class="help-text">Se o agente está protegido por API key, cole-a aqui.</p>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="saveSettings()" style="margin-top: 8px;">
-                💾 Salvar Conexão
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="testConnection()" style="margin-top: 8px; margin-left: 8px;">
-                🔍 Testar Conexão
-            </button>
-            <div id="connectionResult" style="margin-top: 12px; font-size: 13px;"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn btn-brand btn-sm" onclick="saveConn()">💾 Salvar</button>
+                <button class="btn btn-ghost btn-sm" onclick="testConn()">🔍 Testar</button>
+            </div>
+            <div id="connResult" style="margin-top:10px;font-size:12px;"></div>
         </div>
 
-        <!-- User Management -->
-        <div class="settings-section">
-            <h3>👤 Alterar Senha</h3>
+        <!-- Change password -->
+        <div class="settings-card">
+            <h3>🔐 Alterar Senha</h3>
             <div class="form-group">
                 <label>Senha Atual</label>
-                <input type="password" id="currentPassword" placeholder="••••••••">
+                <input type="password" id="curPw" placeholder="••••••••">
             </div>
             <div class="form-group">
                 <label>Nova Senha</label>
-                <input type="password" id="newPassword" placeholder="••••••••">
+                <input type="password" id="newPw" placeholder="Mínimo 6 caracteres">
             </div>
-            <button class="btn btn-primary btn-sm" onclick="changePassword()">🔐 Alterar Senha</button>
-            <div id="passwordResult" style="margin-top: 12px; font-size: 13px;"></div>
+            <button class="btn btn-brand btn-sm" onclick="changePw()" style="margin-top:6px;">Alterar</button>
+            <div id="pwResult" style="margin-top:8px;font-size:12px;"></div>
         </div>
 
-        <!-- Add Users (admin only) -->
-        <div class="settings-section" id="addUserSection">
-            <h3>👥 Adicionar Usuário</h3>
-            <div class="form-group">
-                <label>Usuário</label>
-                <input type="text" id="newUsername" placeholder="nome.usuario">
-            </div>
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="text" id="newUserPassword" placeholder="senha123">
-            </div>
-            <div class="form-group">
-                <label>Nome de Exibição</label>
-                <input type="text" id="newUserName" placeholder="Dr. Fulano">
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="addUser()">➕ Criar Usuário</button>
-            <div id="addUserResult" style="margin-top: 12px; font-size: 13px;"></div>
-            
-            <div style="margin-top: 20px; border-top: 1px solid var(--border-subtle); padding-top: 16px;">
-                <label>Usuários Cadastrados</label>
-                <div id="userList" style="font-size: 13px; color: var(--text-secondary);"></div>
-            </div>
-        </div>
-
-        <!-- About -->
-        <div class="settings-section">
-            <h3>ℹ️ Sobre</h3>
-            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.7;">
-                <strong>Content Studio</strong> é uma plataforma de geração de conteúdo médico para redes sociais.
-                <br><br>
-                Conecta-se ao seu agente de IA local (IPagent + Llama 3.2) via tunnel seguro.
-                Usa suas consultas e dados como base de conhecimento para gerar conteúdo autêntico e embasado.
-                <br><br>
-                <span style="color: var(--text-muted);">Versão 1.0 — Dr. Paulo Guimarães Jr.</span>
+        <!-- Invite users (admin only) -->
+        <div class="settings-card" id="inviteSection">
+            <h3>📨 Convidar Usuário</h3>
+            <p class="help-text" style="margin-bottom:14px;">
+                Convide membros da equipe. Eles receberão um email ou senha temporária para o primeiro acesso, e serão obrigados a trocar a senha.
             </p>
+
+            <div class="invite-row">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="invEmail" placeholder="colega@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="invName" placeholder="Dr. Fulano">
+                </div>
+            </div>
+            <div class="invite-row" style="margin-top:8px;">
+                <div class="form-group">
+                    <label>Senha Temporária</label>
+                    <input type="text" id="invPw" placeholder="trocar123">
+                    <p class="help-text">O convidado será obrigado a trocar no primeiro login.</p>
+                </div>
+                <div class="form-group">
+                    <label>Perfil</label>
+                    <select id="invRole">
+                        <option value="user">Colaborador</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-brand btn-sm" onclick="invite()" style="margin-top:10px;">📨 Enviar Convite</button>
+            <div id="invResult" style="margin-top:8px;font-size:12px;"></div>
+
+            <!-- User list -->
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+                <label>Equipe</label>
+                <div id="userList"></div>
+            </div>
+        </div>
+
+        <!-- Data -->
+        <div class="settings-card">
+            <h3>📦 Dados</h3>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-ghost btn-sm" onclick="exportAll()">📥 Exportar tudo</button>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('impFile').click()">📤 Importar</button>
+            </div>
+            <input type="file" id="impFile" accept=".json" style="display:none" onchange="handleImp(event)">
         </div>
     </div>
 
@@ -116,143 +111,139 @@
     <script src="js/auth.js"></script>
     <script>
         Auth.requireAuth();
-        const session = Auth.getSession();
-        document.getElementById('userAvatar').textContent = (session.name || 'U').charAt(0).toUpperCase();
+        const S = Auth.getSession();
 
-        // Show admin section only for admins
-        if (session.role !== 'admin') {
-            document.getElementById('addUserSection').style.display = 'none';
-        }
+        // Hide admin features
+        if (S.role !== 'admin') document.getElementById('inviteSection').style.display = 'none';
 
         // Load settings
-        const SETTINGS_KEY = 'cs_settings';
-        function getSettings() {
-            try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); }
-            catch { return {}; }
-        }
+        const SK = 'cs_settings';
+        const cfg = () => { try { return JSON.parse(localStorage.getItem(SK)||'{}'); } catch { return {}; } };
+        const c = cfg();
+        document.getElementById('agentUrl').value = c.agentUrl || '';
+        document.getElementById('apiKey').value = c.apiKey || '';
 
-        const settings = getSettings();
-        document.getElementById('agentUrl').value = settings.agentUrl || '';
-        document.getElementById('apiKey').value = settings.apiKey || '';
-
-        // Save settings
-        function saveSettings() {
-            const s = getSettings();
-            s.agentUrl = document.getElementById('agentUrl').value.trim().replace(/\/$/, '');
+        function saveConn() {
+            const s = cfg();
+            s.agentUrl = document.getElementById('agentUrl').value.trim().replace(/\/$/,'');
             s.apiKey = document.getElementById('apiKey').value.trim();
-            localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-            showToast('💾 Configurações salvas!');
+            localStorage.setItem(SK, JSON.stringify(s));
+            toast('💾 Salvo!');
         }
 
-        // Test connection
-        async function testConnection() {
-            const url = document.getElementById('agentUrl').value.trim().replace(/\/$/, '');
-            const apiKey = document.getElementById('apiKey').value.trim();
-            const resultEl = document.getElementById('connectionResult');
-
-            if (!url) {
-                resultEl.innerHTML = '<span style="color: var(--accent-danger);">❌ Informe a URL do agente</span>';
-                return;
-            }
-
-            resultEl.innerHTML = '<span style="color: var(--accent-warning);">⏳ Testando conexão...</span>';
-
+        async function testConn() {
+            const url = document.getElementById('agentUrl').value.trim().replace(/\/$/,'');
+            const key = document.getElementById('apiKey').value.trim();
+            const el = document.getElementById('connResult');
+            if (!url) { el.innerHTML = '<span style="color:var(--red);">❌ Informe a URL</span>'; return; }
+            el.innerHTML = '<span style="color:var(--brand);">⏳ Testando...</span>';
             try {
-                const headers = {};
-                if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-
-                const resp = await fetch(`${url}/api/content/health`, {
-                    headers,
-                    signal: AbortSignal.timeout(8000),
-                });
-
-                if (resp.ok) {
-                    const data = await resp.json();
-                    resultEl.innerHTML = `
-                        <span style="color: var(--accent-success);">✅ Conectado!</span><br>
-                        <span style="color: var(--text-muted); font-size: 12px;">
-                            Agente: ${data.agent_ready ? '🟢 Pronto' : '🟡 Carregando'} |
-                            Base: ${data.knowledge_count || 0} documentos
-                        </span>
-                    `;
-                } else {
-                    resultEl.innerHTML = `<span style="color: var(--accent-danger);">❌ Erro HTTP ${resp.status}</span>`;
-                }
-            } catch (e) {
-                resultEl.innerHTML = `<span style="color: var(--accent-danger);">❌ Não foi possível conectar. Verifique se o tunnel está ativo.</span>`;
-            }
+                const h = {}; if (key) h['Authorization'] = `Bearer ${key}`;
+                const r = await fetch(`${url}/api/content/health`, { headers: h, signal: AbortSignal.timeout(8000) });
+                if (r.ok) {
+                    const d = await r.json();
+                    el.innerHTML = `<span style="color:var(--green);">✅ Conectado!</span> · ${d.agent_ready?'🟢 Pronto':'🟡 Carregando'} · ${d.knowledge_count||0} docs`;
+                } else el.innerHTML = `<span style="color:var(--red);">❌ HTTP ${r.status}</span>`;
+            } catch { el.innerHTML = '<span style="color:var(--red);">❌ Sem resposta. Tunnel ativo?</span>'; }
         }
 
-        // Change password
-        function changePassword() {
-            const current = document.getElementById('currentPassword').value;
-            const newPw = document.getElementById('newPassword').value;
-            const resultEl = document.getElementById('passwordResult');
+        function changePw() {
+            const cur = document.getElementById('curPw').value;
+            const nw = document.getElementById('newPw').value;
+            const el = document.getElementById('pwResult');
+            const r = Auth.changePassword(cur, nw);
+            el.innerHTML = r.success
+                ? '<span style="color:var(--green);">✅ Senha alterada!</span>'
+                : `<span style="color:var(--red);">❌ ${r.error}</span>`;
+            if (r.success) { document.getElementById('curPw').value=''; document.getElementById('newPw').value=''; }
+        }
 
-            const result = Auth.changePassword(current, newPw);
-            if (result.success) {
-                resultEl.innerHTML = '<span style="color: var(--accent-success);">✅ Senha alterada com sucesso!</span>';
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
+        function invite() {
+            const email = document.getElementById('invEmail').value.trim();
+            const name = document.getElementById('invName').value.trim();
+            const pw = document.getElementById('invPw').value;
+            const role = document.getElementById('invRole').value;
+            const el = document.getElementById('invResult');
+
+            if (!email || !pw) { el.innerHTML = '<span style="color:var(--red);">❌ Email e senha obrigatórios</span>'; return; }
+            if (pw.length < 4) { el.innerHTML = '<span style="color:var(--red);">❌ Senha muito curta</span>'; return; }
+
+            const r = Auth.inviteUser(email, name, pw, role);
+            if (r.success) {
+                el.innerHTML = `<span style="color:var(--green);">✅ Convite criado!</span><br><span style="color:var(--text-3);font-size:11px;">Username: <strong>${r.user.username}</strong> · Senha temp: informar pessoalmente ou enviar por email.</span>`;
+                document.getElementById('invEmail').value = '';
+                document.getElementById('invName').value = '';
+                document.getElementById('invPw').value = '';
+                renderUsers();
             } else {
-                resultEl.innerHTML = `<span style="color: var(--accent-danger);">❌ ${result.error}</span>`;
+                el.innerHTML = `<span style="color:var(--red);">❌ ${r.error}</span>`;
             }
         }
 
-        // Add user
-        function addUser() {
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newUserPassword').value;
-            const name = document.getElementById('newUserName').value.trim();
-            const resultEl = document.getElementById('addUserResult');
-
-            if (!username || !password) {
-                resultEl.innerHTML = '<span style="color: var(--accent-danger);">❌ Usuário e senha obrigatórios</span>';
-                return;
-            }
-
-            const result = Auth.addUser(username, password, name || username, 'user');
-            if (result.success) {
-                resultEl.innerHTML = `<span style="color: var(--accent-success);">✅ Usuário "${username}" criado!</span>`;
-                document.getElementById('newUsername').value = '';
-                document.getElementById('newUserPassword').value = '';
-                document.getElementById('newUserName').value = '';
-                renderUserList();
-            } else {
-                resultEl.innerHTML = `<span style="color: var(--accent-danger);">❌ ${result.error}</span>`;
-            }
-        }
-
-        // Render user list
-        function renderUserList() {
+        function renderUsers() {
             const users = Auth.getUsers();
-            document.getElementById('userList').innerHTML = users.map(u => `
-                <div style="padding: 8px 0; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-                    <span><strong>${u.name || u.username}</strong> <span style="color: var(--text-muted);">(${u.username})</span></span>
-                    <span class="badge" style="font-size: 9px; padding: 2px 6px; background: hsla(45,80%,55%,0.1); border: 1px solid hsla(45,80%,55%,0.2); border-radius: 10px; color: var(--accent-primary);">${u.role}</span>
-                </div>
-            `).join('');
+            document.getElementById('userList').innerHTML = users.map(u => {
+                const initial = (u.name||u.username).charAt(0).toUpperCase();
+                const roleCls = {admin:'role-admin',user:'role-user'}[u.role] || 'role-pending';
+                const roleLabel = {admin:'Admin',user:'Colaborador'}[u.role] || u.role;
+                const pending = u.mustChangePassword ? '<span style="color:var(--brand);font-size:10px;"> · pendente</span>' : '';
+                const removeBtn = (S.role==='admin' && u.id !== S.id)
+                    ? `<button class="btn btn-danger btn-sm" style="padding:4px 8px;font-size:10px;" onclick="removeUser('${u.id}')">✕</button>` : '';
+                return `<div class="user-list-item">
+                    <div class="user-info">
+                        <div class="user-mini-avatar">${initial}</div>
+                        <div class="user-details">
+                            <div class="name">${u.name||u.username}${pending}</div>
+                            <div class="email">${u.email||u.username}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <span class="role-badge ${roleCls}">${roleLabel}</span>
+                        ${removeBtn}
+                    </div>
+                </div>`;
+            }).join('');
         }
 
-        renderUserList();
-
-        // Helpers
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+        function removeUser(id) {
+            if (!confirm('Remover este usuário?')) return;
+            Auth.removeUser(id);
+            renderUsers();
+            toast('Usuário removido');
         }
 
-        function toggleUserMenu() {
-            document.getElementById('userDropdown').classList.toggle('show');
+        renderUsers();
+
+        // Export/Import
+        function exportAll() {
+            const PK = 'cs_projects';
+            const all = JSON.parse(localStorage.getItem(PK)||'[]');
+            if (!all.length) { toast('Nada para exportar'); return; }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(all,null,2)],{type:'application/json'}));
+            a.download = `content-studio-backup-${new Date().toISOString().slice(0,10)}.json`;
+            a.click(); toast(`📥 ${all.length} docs exportados`);
         }
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.user-menu')) {
-                document.getElementById('userDropdown').classList.remove('show');
-            }
-        });
+        function handleImp(ev) {
+            const f = ev.target.files[0]; if (!f) return;
+            const r = new FileReader();
+            r.onload = e => {
+                try {
+                    const imp = JSON.parse(e.target.result);
+                    if (!Array.isArray(imp)) throw 0;
+                    localStorage.setItem('cs_projects', JSON.stringify(imp));
+                    toast(`📤 ${imp.length} docs importados`);
+                } catch { toast('❌ Arquivo inválido'); }
+            };
+            r.readAsText(f); ev.target.value = '';
+        }
+
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
     </script>
 </body>
 </html>

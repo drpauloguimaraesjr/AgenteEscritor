@@ -1,134 +1,163 @@
 /**
- * Auth — Client-side authentication module.
- * Users are stored in localStorage. In production, integrate with a real backend.
+ * Auth — Client-side authentication with invite system.
+ * Users stored in localStorage.
+ * Admins can "invite" users by creating them with a temp password.
+ * Invited users must change password on first login.
  */
 
 const Auth = (() => {
-    const STORAGE_KEY = 'cs_auth';
+    const SESSION_KEY = 'cs_session';
     const USERS_KEY = 'cs_users';
 
-    // Initialize default users if none exist
-    function initDefaults() {
-        const users = getUsers();
-        if (users.length === 0) {
-            const defaults = [
-                {
-                    username: 'admin',
-                    passwordHash: hashPassword('admin123'),
-                    name: 'Dr. Paulo',
-                    role: 'admin',
-                    createdAt: new Date().toISOString(),
-                },
-            ];
-            localStorage.setItem(USERS_KEY, JSON.stringify(defaults));
+    // Simple hash (client-side only — fine for internal tool)
+    function hash(str) {
+        let h = 0;
+        for (let i = 0; i < str.length; i++) {
+            h = ((h << 5) - h) + str.charCodeAt(i);
+            h |= 0;
         }
-    }
-
-    function hashPassword(password) {
-        // Simple hash for client-side (not cryptographically secure — fine for demo/internal use)
-        let hash = 0;
-        for (let i = 0; i < password.length; i++) {
-            const char = password.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash |= 0;
-        }
-        return 'h_' + Math.abs(hash).toString(36);
+        return 'h' + Math.abs(h).toString(36);
     }
 
     function getUsers() {
-        try {
-            return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-        } catch {
-            return [];
-        }
+        try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch { return []; }
     }
 
-    function saveUsers(users) {
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    }
+    function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+
+    // Init default admin
+    (() => {
+        if (getUsers().length === 0) {
+            saveUsers([{
+                id: 'u_1',
+                username: 'admin',
+                email: 'admin@contentstudio.local',
+                passwordHash: hash('admin123'),
+                name: 'Dr. Paulo',
+                role: 'admin',
+                mustChangePassword: false,
+                createdAt: new Date().toISOString(),
+                invitedBy: null,
+            }]);
+        }
+    })();
 
     function login(username, password) {
-        initDefaults();
         const users = getUsers();
-        const pwHash = hashPassword(password);
-        const user = users.find(u => u.username === username && u.passwordHash === pwHash);
-        if (!user) {
-            return { success: false, error: 'Usuário ou senha incorretos' };
-        }
+        const pwHash = hash(password);
+        // Match by username OR email
+        const user = users.find(u =>
+            (u.username === username || u.email === username) && u.passwordHash === pwHash
+        );
+        if (!user) return { success: false, error: 'Credenciais inválidas' };
+
         const session = {
+            id: user.id,
             username: user.username,
+            email: user.email,
             name: user.name,
             role: user.role,
             loginAt: new Date().toISOString(),
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+        if (user.mustChangePassword) {
+            return { success: true, user: session, mustChangePassword: true };
+        }
+
         return { success: true, user: session };
     }
 
     function logout() {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SESSION_KEY);
         window.location.href = 'index.html';
     }
 
-    function isLoggedIn() {
-        return !!localStorage.getItem(STORAGE_KEY);
-    }
+    function isLoggedIn() { return !!localStorage.getItem(SESSION_KEY); }
 
     function getSession() {
-        try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY));
-        } catch {
-            return null;
-        }
+        try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; }
     }
 
     function requireAuth() {
-        if (!isLoggedIn()) {
-            window.location.href = 'index.html';
-            return false;
-        }
+        if (!isLoggedIn()) { window.location.href = 'index.html'; return false; }
         return true;
     }
 
     function changePassword(currentPw, newPw) {
         const session = getSession();
         if (!session) return { success: false, error: 'Não autenticado' };
-        
         const users = getUsers();
-        const user = users.find(u => u.username === session.username);
+        const user = users.find(u => u.id === session.id);
         if (!user) return { success: false, error: 'Usuário não encontrado' };
+        if (user.passwordHash !== hash(currentPw)) return { success: false, error: 'Senha atual incorreta' };
+        if (newPw.length < 6) return { success: false, error: 'Mínimo 6 caracteres' };
 
-        if (user.passwordHash !== hashPassword(currentPw)) {
-            return { success: false, error: 'Senha atual incorreta' };
-        }
-
-        if (newPw.length < 4) {
-            return { success: false, error: 'Senha muito curta (mín. 4)' };
-        }
-
-        user.passwordHash = hashPassword(newPw);
+        user.passwordHash = hash(newPw);
+        user.mustChangePassword = false;
         saveUsers(users);
         return { success: true };
     }
 
-    function addUser(username, password, name, role = 'user') {
+    function clearMustChange(username) {
         const users = getUsers();
+        const user = users.find(u => u.username === username);
+        if (user) {
+            user.mustChangePassword = false;
+            saveUsers(users);
+        }
+    }
+
+    /**
+     * Invite a new user (admin only).
+     * Creates user with temp password. They must change on first login.
+     */
+    function inviteUser(email, name, tempPassword, role = 'user') {
+        const users = getUsers();
+        const session = getSession();
+        
+        // Check if email already exists
+        if (users.find(u => u.email === email)) {
+            return { success: false, error: 'Email já cadastrado' };
+        }
+
+        // Generate username from email
+        const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
         if (users.find(u => u.username === username)) {
             return { success: false, error: 'Usuário já existe' };
         }
-        users.push({
+
+        const newUser = {
+            id: 'u_' + Date.now(),
             username,
-            passwordHash: hashPassword(password),
+            email,
+            passwordHash: hash(tempPassword),
             name: name || username,
             role,
+            mustChangePassword: true,
             createdAt: new Date().toISOString(),
-        });
+            invitedBy: session ? session.username : 'system',
+        };
+
+        users.push(newUser);
+        saveUsers(users);
+
+        return { success: true, user: newUser };
+    }
+
+    function removeUser(userId) {
+        const session = getSession();
+        if (!session || session.role !== 'admin') return { success: false, error: 'Sem permissão' };
+        if (userId === session.id) return { success: false, error: 'Não pode remover a si mesmo' };
+
+        const users = getUsers().filter(u => u.id !== userId);
         saveUsers(users);
         return { success: true };
     }
 
-    // Auto-init
-    initDefaults();
-
-    return { login, logout, isLoggedIn, getSession, requireAuth, changePassword, addUser, getUsers };
+    return {
+        login, logout, isLoggedIn, getSession, requireAuth,
+        changePassword, clearMustChange,
+        inviteUser, removeUser, getUsers, hash
+    };
 })();
