@@ -1,44 +1,44 @@
 /* ============================================
-   Content Studio — Manus-Inspired Design
-   Clean workspace aesthetic + Dr. Paulo brand
+   Content Studio — Eva Effects Design System
+   Paper/editorial aesthetic + Dr. Paulo brand
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* === Variables === */
+/* === Variables (Eva Effects paper theme) === */
 :root {
-    --bg-base: #0d0d11;
-    --bg-surface: #141419;
-    --bg-elevated: #1b1b22;
-    --bg-overlay: #22222d;
-    --bg-hover: #2a2a38;
-    --bg-input: #18181f;
-    --brand: hsl(45, 80%, 55%);
-    --brand-dim: hsl(45, 50%, 40%);
-    --brand-glow: hsla(45, 80%, 55%, 0.15);
-    --brand-text: hsl(45, 5%, 10%);
+    --bg-base: #F8F6F2;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: #F0EDE8;
+    --bg-overlay: #E8E4DE;
+    --bg-hover: #ECEAE5;
+    --bg-input: #FFFFFF;
+    --brand: #000000;
+    --brand-dim: #333333;
+    --brand-glow: rgba(0, 0, 0, 0.06);
+    --brand-text: #FFFFFF;
     --violet: #7c5cfc;
-    --violet-dim: hsla(252, 80%, 65%, 0.1);
-    --green: #34d399;
-    --green-dim: hsla(160, 60%, 50%, 0.1);
-    --red: #f87171;
-    --red-dim: hsla(0, 90%, 70%, 0.1);
-    --yellow: hsl(45, 90%, 60%);
-    --text-1: #f0f0f5;
-    --text-2: #a0a0b8;
-    --text-3: #5e5e76;
-    --text-4: #3e3e52;
-    --border: #23232e;
-    --border-active: hsla(45, 80%, 55%, 0.25);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
-    --shadow-glow: 0 0 24px hsla(45, 80%, 55%, 0.08);
-    --r-xs: 6px;
-    --r-sm: 8px;
-    --r-md: 12px;
-    --r-lg: 16px;
-    --r-xl: 24px;
+    --violet-dim: hsla(252, 80%, 65%, 0.08);
+    --green: #2d8a5e;
+    --green-dim: hsla(150, 50%, 40%, 0.08);
+    --red: #c0392b;
+    --red-dim: hsla(6, 70%, 45%, 0.08);
+    --yellow: hsl(45, 70%, 50%);
+    --text-1: #1a1a1a;
+    --text-2: #555555;
+    --text-3: #888888;
+    --text-4: #bbbbbb;
+    --border: #e0ddd7;
+    --border-active: rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
+    --shadow-glow: none;
+    --r-xs: 4px;
+    --r-sm: 6px;
+    --r-md: 8px;
+    --r-lg: 12px;
+    --r-xl: 16px;
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
     --speed: 200ms;
 }
@@ -62,7 +62,7 @@ body {
 /* === Scrollbar === */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--text-4); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
 
 /* ============================================
@@ -100,8 +100,8 @@ body {
 .sidebar-logo {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, var(--brand), hsl(45, 90%, 42%));
-    border-radius: 9px;
+    background: #1a1a1a;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -171,19 +171,27 @@ body {
 }
 
 .sidebar-nav-item.active {
-    background: var(--brand-glow);
-    color: var(--brand);
+    background: #1a1a1a;
+    color: #FFFFFF;
 }
 
-.sidebar-nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+.sidebar-nav-item .nav-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    width: 20px;
+    text-align: center;
+    text-transform: uppercase;
+}
 
 .sidebar-label {
     padding: 14px 14px 6px;
-    font-size: 10px;
-    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text-4);
+    letter-spacing: 2px;
+    color: var(--text-3);
 }
 
 /* Files list */
@@ -245,13 +253,13 @@ body {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--brand), var(--violet));
+    background: #1a1a1a;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 12px;
     font-weight: 700;
-    color: var(--brand-text);
+    color: #FFFFFF;
     flex-shrink: 0;
     cursor: pointer;
 }
@@ -779,13 +787,7 @@ select {
 }
 
 .login-shell::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-        radial-gradient(ellipse at 30% 40%, hsla(45,80%,55%,0.035) 0%, transparent 50%),
-        radial-gradient(ellipse at 70% 60%, hsla(252,80%,65%,0.03) 0%, transparent 50%);
-    pointer-events: none;
+    display: none;
 }
 
 .login-card {
@@ -807,9 +809,13 @@ select {
 }
 
 .login-lottie {
-    width: 64px;
-    height: 64px;
+    width: 80px;
+    height: 80px;
     margin: 0 auto 16px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .login-header h1 {

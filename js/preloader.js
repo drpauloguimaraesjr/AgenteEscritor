@@ -1,11 +1,9 @@
 /**
- * Preloader — DNA Loading Screen
- * Vanilla JS version of the React Preloader from DiretorioSystemDesign.
- * Uses Lottie DNA animation + percentage counter.
+ * Preloader — DNA Loading Screen (Eva Effects Light Theme)
+ * Uses the AnimatedLogo (Lottie dna-loading.json) — scaled up to crop margins.
  */
 
 (function() {
-    // Create preloader DOM
     const overlay = document.createElement('div');
     overlay.id = 'preloader';
     overlay.innerHTML = `
@@ -15,7 +13,7 @@
                     src="img/dna-loading.json"
                     background="transparent"
                     speed="2"
-                    style="width:160px;height:160px;"
+                    style="width:340px;height:340px;"
                     loop autoplay>
                 </lottie-player>
             </div>
@@ -29,13 +27,12 @@
     `;
     document.body.prepend(overlay);
 
-    // Inject styles
     const style = document.createElement('style');
     style.textContent = `
         #preloader {
             position: fixed;
             inset: 0;
-            background: #0d0d11;
+            background: #F8F6F2;
             z-index: 20000;
             display: flex;
             justify-content: center;
@@ -58,33 +55,38 @@
             transform: translateY(-30px);
         }
         .preloader-lottie {
-            filter: drop-shadow(0 0 30px hsla(45, 80%, 55%, 0.15));
+            width: 120px;
+            height: 120px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .preloader-lottie lottie-player {
+            transform: scale(2.8);
         }
         .preloader-bar-track {
-            width: 180px;
-            height: 2px;
-            background: hsla(45, 5%, 95%, 0.08);
-            border-radius: 2px;
+            width: 120px;
+            height: 1px;
+            background: rgba(0, 0, 0, 0.08);
             overflow: hidden;
         }
         .preloader-bar-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, hsl(45, 80%, 55%), hsl(45, 90%, 65%));
-            border-radius: 2px;
+            background: #1a1a1a;
             transition: width 0.05s linear;
         }
         .preloader-text {
-            font-family: 'Inter', system-ui, sans-serif;
-            font-size: 0.6rem;
-            letter-spacing: 0.15em;
-            color: hsla(45, 5%, 95%, 0.25);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.5rem;
+            letter-spacing: 0.2em;
+            color: rgba(0, 0, 0, 0.18);
             text-transform: uppercase;
         }
     `;
     document.head.appendChild(style);
 
-    // Animate percentage 0→100
     let pct = 0;
     const pctEl = document.getElementById('preloaderPct');
     const barEl = document.getElementById('preloaderBar');
@@ -98,18 +100,9 @@
 
         if (pct >= 100) {
             clearInterval(interval);
-            // Fade content
-            setTimeout(() => {
-                content.classList.add('fade-out');
-            }, 200);
-            // Slide overlay up
-            setTimeout(() => {
-                overlay.classList.add('exit');
-            }, 700);
-            // Hide completely
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-            }, 1800);
+            setTimeout(() => { content.classList.add('fade-out'); }, 200);
+            setTimeout(() => { overlay.classList.add('exit'); }, 700);
+            setTimeout(() => { overlay.classList.add('hidden'); }, 1800);
         }
     }, 15);
 })();
