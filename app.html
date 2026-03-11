@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Studio</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"></script>
 </head>
 <body>
+    <script src="js/preloader.js"></script>
     <!-- Connection banner -->
     <div class="conn-banner" id="connBanner">
         ⚠️ Agente local offline — <a href="settings.html">configurar tunnel</a>
@@ -158,8 +160,14 @@
                             <label>🔍 Usar base de consultas (RAG)</label>
                             <input type="checkbox" class="toggle" id="useRag" checked>
                         </div>
-                        <!-- AI Output -->
-                        <div class="ai-output" id="aiOut"></div>
+                        <!-- AI Output (CodeDisplay-inspired) -->
+                        <div class="ai-output-wrap" id="aiOutWrap">
+                            <div class="ai-output-header">
+                                <span>📄 resultado</span>
+                                <button onclick="copyAi()">📋 Copiar</button>
+                            </div>
+                            <div class="ai-output" id="aiOut"></div>
+                        </div>
                         <div class="ai-actions" id="aiActs">
                             <button class="btn btn-ghost btn-sm" onclick="insertToEditor()">📥 Inserir</button>
                             <button class="btn btn-ghost btn-sm" onclick="replaceEditor()">🔄 Substituir</button>

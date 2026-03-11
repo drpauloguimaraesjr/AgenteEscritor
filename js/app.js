@@ -171,11 +171,13 @@ async function generate() {
 
     const btn = document.getElementById('genBtn');
     const out = document.getElementById('aiOut');
+    const wrap = document.getElementById('aiOutWrap');
     const acts = document.getElementById('aiActs');
 
     generating = true;
     btn.classList.add('loading'); btn.textContent = '⏳ Gerando...';
-    out.classList.add('visible'); out.innerHTML = '<span class="cursor-blink"></span>';
+    wrap.classList.add('visible');
+    out.innerHTML = '<span class="typing-cursor"></span>';
     acts.classList.remove('visible');
     setBadge('loading', 'gerando...');
 
@@ -195,7 +197,14 @@ async function generate() {
             if (done) break;
             for (const line of dec.decode(value, {stream:true}).split('\n')) {
                 if (line.startsWith('data: ')) {
-                    try { const d = JSON.parse(line.slice(6)); if (d.token) { full += d.token; out.textContent = full; out.scrollTop = out.scrollHeight; } } catch {}
+                    try {
+                        const d = JSON.parse(line.slice(6));
+                        if (d.token) {
+                            full += d.token;
+                            out.textContent = full;
+                            out.scrollTop = out.scrollHeight;
+                        }
+                    } catch {}
                 }
             }
         }
@@ -206,7 +215,7 @@ async function generate() {
             if (d.content) { full = d.content; out.textContent = full; }
             else if (d.error) out.textContent = '❌ ' + d.error;
         } catch {
-            out.textContent = '❌ Agente inacessível.\n\n1. IPagent rodando?\n2. Tunnel (ngrok) ativo?\n3. URL configurada?';
+            out.textContent = '❌ Agente inacessível.\n\n1. IPagent rodando local?\n2. Tunnel (ngrok) ativo?\n3. URL configurada em Configurações?';
         }
     }
 

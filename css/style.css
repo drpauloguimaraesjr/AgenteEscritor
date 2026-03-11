@@ -493,22 +493,60 @@ body {
     flex-shrink: 0;
 }
 
-/* AI output */
-.ai-output {
+/* AI output — CodeDisplay inspired */
+.ai-output-wrap {
     display: none;
-    background: var(--bg-base);
     border: 1px solid var(--border);
     border-radius: var(--r-sm);
-    padding: 14px;
-    font-size: 13px;
-    line-height: 1.8;
-    white-space: pre-wrap;
-    max-height: 300px;
-    overflow-y: auto;
-    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    background: var(--bg-base);
 }
 
-.ai-output.visible { display: block; }
+.ai-output-wrap.visible { display: block; }
+
+.ai-output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    background: hsla(45, 5%, 15%, 0.3);
+}
+
+.ai-output-header span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-output-header button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: none;
+    color: var(--text-3);
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: color var(--speed) var(--ease);
+}
+
+.ai-output-header button:hover { color: var(--text-1); }
+
+.ai-output {
+    display: block;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    max-height: 340px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-2);
+}
 
 .ai-actions {
     display: none;
@@ -518,6 +556,30 @@ body {
 }
 
 .ai-actions.visible { display: flex; }
+
+/* Typing cursor for AI */
+.typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: var(--brand);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.8s ease-in-out infinite;
+}
+
+/* ============================================
+   ANIMATION UTILITIES (from design system tokens)
+   ============================================ */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+.anim-fade-in { animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.anim-slide-up { animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.anim-slide-down { animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.anim-scale-in { animation: scaleIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
 /* ============================================
    FORM ELEMENTS
