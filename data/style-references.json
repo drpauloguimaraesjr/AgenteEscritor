@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "description": "DNA de Estilo - Referências de escrita do Dr. Paulo Guimarães",
+  "styleAnalysis": {
+    "tone": "Provocativo, direto, confrontador com autoridade científica",
+    "structure": [
+      "1. GANCHO VIRAL: Abertura provocativa que desafia o senso comum",
+      "2. CONFRONTO: Desmistifica crenças populares com tom assertivo",
+      "3. EVIDÊNCIAS: Cada estudo é uma seção com nome, revista, ano e conclusão",
+      "4. INSIGHTS: Blocos destacados com síntese (💡 ou aside)",
+      "5. CONTRAPONTO: Mostra falhas nos estudos/posições antigas",
+      "6. FECHAMENTO: Conclusão forte com dados numéricos",
+      "7. CTA: Chamada para ação emocional e direta (🎯)"
+    ],
+    "characteristics": [
+      "Usa linguagem coloquial misturada com termos técnicos",
+      "Cita estudos pelo nome (WHI, HABITS, Stockholm, CLARA)",
+      "Inclui detalhes como revista, ano, número de participantes",
+      "Usa perguntas retóricas para engajar",
+      "Frases curtas e impactantes intercaladas com parágrafos densos",
+      "Tom de quem sabe e não tem medo de falar",
+      "Dados numéricos específicos (+6% risco, +9% risco, 20%)",
+      "Referências a órgãos oficiais (NICE, Cochrane) como argumento de autoridade",
+      "Blocos aside com emoji para destaque de insights-chave",
+      "Headers ### para cada estudo/tópico principal"
+    ],
+    "avoidPatterns": [
+      "Tom genérico ou neutro demais",
+      "Textos tipo Wikipedia ou didáticos sem opinião",
+      "Listas genéricas sem profundidade",
+      "Conclusões vagas sem dados",
+      "Linguagem corporativa ou marketeira"
+    ]
+  },
+  "references": [
+    {
+      "id": "ref_001",
+      "title": "Câncer de Mama e Reposição Hormonal",
+      "platform": "youtube",
+      "duration": "10-15min",
+      "addedAt": "2026-03-12T00:02:00Z",
+      "content": "## 📜 SCRIPT COMPLETO\n\nCâncer de mama assusta. Claro que assusta. Mas existe algo que deveria assustar muito mais: a quantidade de médicos mal informados que ainda demonizam a reposição hormonal. Essa história já foi longe demais e está colocando as mulheres sob um medo desnecessário.\n\nToda mulher escuta ou já escutou a mesma ladainha: \"Seu histórico impede reposição.\" \"Sua mãe teve câncer.\" \"Hormônio causa câncer.\" \"Tem gente com BRCA positivo na sua família\", e por aí vai. Isso não é ciência. Isso é medo, ignorância e preguiça intelectual.\n\nVamos aos fatos. Se hormônio causasse câncer, a solução lógica seria arrancar o ovário de toda mulher ainda enquanto jovem. Ninguém defende isso — porque é absurdo. Mesmo assim, o medo do hormônio persiste, como superstição medieval travestida de prudência.\n\nEnquanto isso, os verdadeiros fatores de risco seguem convenientemente ignorados: Sedentarismo aumenta o risco. Álcool, mesmo em pequenas doses, aumenta o risco. Obesidade após a menopausa aumenta ainda mais o risco. Mas, curiosamente, o vilão continua sendo o hormônio.\n\n### Estudo BRCA (Gynecologic Oncology 2019)\n\nAgora segure esta informação, porque ela desmonta um dogma central. Em 2019, na revista Gynecologic Oncology, uma revisão sistemática avaliou mulheres portadoras de BRCA1 e BRCA2 submetidas à ooforectomia — o grupo mais temido da oncologia. A conclusão foi clara: a terapia de reposição hormonal melhora a qualidade de vida e não aumenta significativamente o risco de câncer de mama.\n\n### Estudos HABITS e Stockholm\n\nO estudo HABITS avaliou 447 mulheres previamente tratadas por câncer de mama em estágios 0 a 2. Destas, 221 receberam TRH — predominantemente estradiol associado à noretisterona. Após cerca de quatro anos, ocorreram 39 recorrências no grupo TRH, contra 17 no grupo controle.\n\nMas aqui está o detalhe que muitos ignoram: foi utilizado progestogênio contínuo, especificamente noretisterona — um esquema sabidamente mais proliferativo no tecido mamário.\n\nO estudo Stockholm incluiu 378 mulheres com câncer de mama previamente tratado. Ocorreram 11 recorrências no grupo com hormônio e 13 no grupo sem hormônio. Resultado: nenhuma associação estatisticamente significativa.\n\n💡 Não é hormônio. É QUAL hormônio, COMO, em QUEM, em que DOSE e em que CONTEXTO.\n\n### Gestrinona\n\nA gestrinona é um 19-noresteroide com perfil farmacológico único. Ela combina ações androgênica, antiestrogênica e anti-inflamatória. Sua eficácia terapêutica é respaldada por revisões sistemáticas da Cochrane.\n\n### NICE Guidelines\n\nO NICE — National Institute for Health and Care Excellence — é uma das instituições mais conservadoras do mundo. Se até o NICE não proíbe reposição hormonal apenas por histórico familiar, a discussão acabou.\n\n> Quem usa histórico familiar como contraindicação absoluta hoje não está sendo prudente. Está sendo mais conservador que o NICE — e isso não é virtude, é desatualização.\n\n### O Estudo WHI e suas falhas\n\nO WHI apresentou falhas graves: idade avançada das participantes (média de 63 anos); uso de hormônios não bioidênticos; interrupção precoce; vieses estatísticos importantes. As consequências foram desastrosas.\n\n### CLARA Study\n\nO CLARA Study trouxe dados inéditos sobre a farmacocinética do implante subcutâneo de 25mg de estradiol: liberação controlada e sustentada, níveis médios estáveis dentro da faixa terapêutica.\n\n### Fechamento\n\nA única contraindicação formal para reposição hormonal é história pessoal de câncer de mama. Hormônio não é o inimigo da mulher. O verdadeiro inimigo é o sedentarismo, o álcool (>6g/dia = +6% risco), e a obesidade (+9% risco).\n\n🎯 Encaminhe este vídeo para aquela pessoa que vive falando mal de hormônio. Se você é mulher, entenda: o problema não é a reposição hormonal. O problema é o médico que parou no tempo."
+    },
+    {
+      "id": "ref_002",
+      "title": "50% dos usuários de EAA têm ECG alterado",
+      "platform": "reels",
+      "duration": "1-3min",
+      "addedAt": "2026-03-12T00:05:00Z",
+      "source": "Notion - Roteiros de Reels",
+      "content": "Um estudo mostrou que mais de 50% dos usuários de anabolizantes têm alterações no ECG. Assustador? Olha o contexto.\n\nDados: 23 usuários, >2 anos de uso, doses >100mg/semana.\n\nO pulo do gato: Esses usuários usavam Boldenona Veterinária (400mg/sem), tinham zero acompanhamento médico e zero TPC.\n\n💡 O problema não é o hormônio, é o abuso sem orientação.\n\n🎯 Quer usar hormônio? Usa com médico. Com exame. Com dose certa. Sem achismo. Me segue pra referência aplicada."
+    },
+    {
+      "id": "ref_003",
+      "title": "Testosterona e Infarto (Circulation)",
+      "platform": "reels",
+      "duration": "1min",
+      "addedAt": "2026-03-12T00:05:00Z",
+      "source": "Notion - Roteiros de Reels",
+      "cta": "Compartilhe com um colega que precisa sair urgentemente da idade média endocrinológica. Quem entende fisiologia não teme hormônio."
+    },
+    {
+      "id": "ref_004",
+      "title": "Menopausa e Músculo",
+      "platform": "reels",
+      "duration": "1min",
+      "addedAt": "2026-03-12T00:05:00Z",
+      "source": "Notion - Roteiros de Reels",
+      "cta": "Músculo não é estética. É sobrevivência. Toda semana eu trago ciência de verdade — sem medo de contrariar o senso comum."
+    },
+    {
+      "id": "ref_005",
+      "title": "TSH e Tireoide",
+      "platform": "reels",
+      "duration": "1min",
+      "addedAt": "2026-03-12T00:05:00Z",
+      "source": "Notion - Roteiros de Reels",
+      "cta": "Medicina não é torcida. Que seja o lado do paciente e da fisiologia viva, não do protocolo."
+    }
+  ]
+}
