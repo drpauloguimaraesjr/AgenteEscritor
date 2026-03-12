@@ -500,23 +500,42 @@ async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxR
 // ── Destilação: salva par de treinamento para Llama3 ──
 function saveTrainingPair(userPrompt, claudeResponse, ragContext) {
     const TRAIN_KEY = 'cs_training_dataset';
+    const entry = {
+        instruction: `Você é o assistente de conteúdo do Dr. Paulo Guimarães. Gere conteúdo médico para redes sociais no estilo do Dr. Paulo: provocativo, embasado em evidências, com ganchos virais e CTAs fortes.`,
+        input: userPrompt + (ragContext ? '\n\n[CONTEXTO RAG]\n' + ragContext.slice(0, 2000) : ''),
+        output: claudeResponse,
+        category: 'content_generation',
+        platform: curPlat || 'youtube',
+        created_at: new Date().toISOString(),
+    };
+
+    // 1. Salvar no localStorage (backup)
     try {
         const dataset = JSON.parse(localStorage.getItem(TRAIN_KEY) || '[]');
-
-        // Formato Alpaca (compatível com Unsloth / fine-tuning)
-        dataset.push({
-            instruction: `Você é o assistente de conteúdo do Dr. Paulo Guimarães. Gere conteúdo médico para redes sociais no estilo do Dr. Paulo: provocativo, embasado em evidências, com ganchos virais e CTAs fortes.`,
-            input: userPrompt + (ragContext ? '\n\n[CONTEXTO RAG]\n' + ragContext.slice(0, 2000) : ''),
-            output: claudeResponse,
-            category: 'content_generation',
-            platform: curPlat || 'youtube',
-            created_at: new Date().toISOString(),
-        });
-
+        dataset.push(entry);
         localStorage.setItem(TRAIN_KEY, JSON.stringify(dataset));
-        console.log(`🎓 Par de treinamento #${dataset.length} salvo para Llama3`);
+        console.log(`🎓 Training #${dataset.length} salvo (localStorage)`);
     } catch (e) {
-        console.warn('Erro ao salvar treinamento:', e);
+        console.warn('Erro salvar localStorage:', e);
+    }
+
+    // 2. Salvar no disco local via IPAgent
+    const url = agentUrl();
+    if (url) {
+        const headers = { 'Content-Type': 'application/json' };
+        const key = apiKey();
+        if (key) headers['Authorization'] = `Bearer ${key}`;
+
+        fetch(`${url}/api/training/save`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(entry),
+            signal: AbortSignal.timeout(5000),
+        }).then(r => r.json()).then(d => {
+            if (d.success) console.log(`🎓 Training #${d.total} salvo (disco: ipagent/data/training/)`);
+        }).catch(() => {
+            console.log('🎓 IPAgent offline — treinamento salvo apenas no localStorage');
+        });
     }
 }
 

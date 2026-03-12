@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Studio — Configurações</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        html, body { overflow: auto !important; height: auto !important; min-height: 100vh; }
+        .settings-shell { max-width: 640px; margin: 0 auto; padding: 24px 16px 80px; }
+        .settings-card { background: var(--bg-2, #1a1a2e); border: 1px solid var(--border, #2a2a3e); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .settings-card h3 { margin: 0 0 14px; font-size: 15px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-2, #aaa); margin-bottom: 4px; font-weight: 600; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 12px; background: var(--bg-3, #0d0d1a); border: 1px solid var(--border, #2a2a3e); border-radius: 8px; color: var(--text-1, #eee); font-size: 13px; }
+        .help-text { font-size: 11px; color: var(--text-3, #666); margin-top: 4px; }
+        .invite-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    </style>
 </head>
 <body style="overflow:auto;">
     <!-- Simple topbar for settings -->
@@ -168,7 +179,10 @@
         const S = Auth.getSession();
 
         // Hide admin features
-        if (S.role !== 'admin') document.getElementById('inviteSection').style.display = 'none';
+        if (S.role !== 'admin') {
+            document.getElementById('inviteSection').style.display = 'none';
+            document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
+        }
 
         // Load settings
         const SK = 'cs_settings';
@@ -360,12 +374,6 @@
         document.getElementById('openrouterKey').value = localStorage.getItem('cs_openrouter_api_key') || '';
         document.getElementById('openrouterModel').value = localStorage.getItem('cs_openrouter_model') || 'anthropic/claude-3-opus';
         updateTrainingStats();
-
-        // Hide admin-only items
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.role !== 'admin') {
-            document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
-        }
 
         // Export/Import
         function exportAll() {

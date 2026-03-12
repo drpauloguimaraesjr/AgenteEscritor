@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Destilação Neural — Llama3 Training Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700;900&display=swap');
+
+        body {
+            background: #07090f;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        body::before {
+            content:'';
+            position:fixed; inset:0;
+            background-image:
+                linear-gradient(rgba(212,175,55,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(212,175,55,0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events:none; z-index:0;
+        }
+
+        .dashboard {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .dash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(212,175,55,0.15);
+        }
+        .dash-header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #d4af37, #f5d67b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+        .dash-header p {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .back-link {
+            color: #888;
+            text-decoration: none;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #d4af37; }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(212,175,55,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            border-color: rgba(212,175,55,0.3);
+            transform: translateY(-2px);
+        }
+        .stat-value {
+            font-size: 42px;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: #d4af37;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+        .stat-card.ready .stat-value { color: #4ade80; }
+        .stat-card.warn .stat-value { color: #f59e0b; }
+
+        /* Progress Bar */
+        .progress-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(212,175,55,0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        .progress-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .progress-title h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e0e0e0;
+            margin: 0;
+        }
+        .progress-title span {
+            font-size: 13px;
+            color: #888;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .progress-bar-bg {
+            height: 24px;
+            background: rgba(212,175,55,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d4af37, #f5d67b);
+            border-radius: 12px;
+            transition: width 1s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .progress-bar-fill::after {
+            content: attr(data-label);
+            font-size: 11px;
+            font-weight: 700;
+            color: #07090f;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .milestones {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding: 0 4px;
+        }
+        .milestone {
+            text-align: center;
+            font-size: 10px;
+            color: #555;
+        }
+        .milestone.reached { color: #4ade80; }
+        .milestone .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #333;
+            margin: 0 auto 4px;
+        }
+        .milestone.reached .dot { background: #4ade80; }
+
+        /* Table */
+        .data-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(212,175,55,0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        .data-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            text-align: left;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(212,175,55,0.1);
+        }
+        .data-table td {
+            padding: 12px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: top;
+        }
+        .data-table tr:hover td {
+            background: rgba(212,175,55,0.03);
+        }
+        .truncate {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .tag-youtube { background: rgba(234,51,35,0.15); color: #ea3323; }
+        .tag-instagram { background: rgba(225,48,108,0.15); color: #e1306c; }
+        .tag-default { background: rgba(212,175,55,0.15); color: #d4af37; }
+
+        /* Actions */
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(212,175,55,0.2);
+            background: rgba(212,175,55,0.06);
+            color: #d4af37;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .action-btn:hover {
+            background: rgba(212,175,55,0.15);
+            border-color: #d4af37;
+            transform: translateY(-1px);
+        }
+        .action-btn.danger {
+            border-color: rgba(239,68,68,0.2);
+            background: rgba(239,68,68,0.06);
+            color: #ef4444;
+        }
+        .action-btn.danger:hover {
+            background: rgba(239,68,68,0.15);
+            border-color: #ef4444;
+        }
+        .action-btn.primary {
+            background: linear-gradient(135deg, #d4af37, #f5d67b);
+            color: #07090f;
+            border: none;
+            font-weight: 700;
+        }
+        .action-btn.primary:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Expanded row */
+        .expand-row {
+            display: none;
+        }
+        .expand-row.show {
+            display: table-row;
+        }
+        .expand-content {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            color: #aaa;
+        }
+        .expand-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #d4af37;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        .empty-state h3 {
+            font-size: 20px;
+            color: #555;
+        }
+        .empty-state p {
+            color: #444;
+            font-size: 14px;
+            max-width: 400px;
+            margin: 12px auto 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-value { font-size: 28px; }
+            .dash-header h1 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="dash-header">
+            <div>
+                <h1>🎓 Destilação Neural</h1>
+                <p>Treinamento do Llama3 local — cada interação com Claude gera dados de fine-tuning</p>
+            </div>
+            <a href="app.html" class="back-link">← Voltar ao Studio</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card" id="cardTotal">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Pares de treinamento</div>
+            </div>
+            <div class="stat-card" id="cardWords">
+                <div class="stat-value" id="statWords">0</div>
+                <div class="stat-label">Palavras geradas</div>
+            </div>
+            <div class="stat-card" id="cardAvg">
+                <div class="stat-value" id="statAvg">0</div>
+                <div class="stat-label">Média palavras/resposta</div>
+            </div>
+            <div class="stat-card" id="cardStatus">
+                <div class="stat-value" id="statStatus">⏳</div>
+                <div class="stat-label">Status fine-tuning</div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-section">
+            <div class="progress-title">
+                <h3>📊 Progresso para Fine-tuning</h3>
+                <span id="progressLabel">0 / 100 exemplos</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressFill" style="width:0%" data-label="0%"></div>
+            </div>
+            <div class="milestones">
+                <div class="milestone" id="m1">
+                    <div class="dot"></div>
+                    <div>10</div>
+                    <div>Início</div>
+                </div>
+                <div class="milestone" id="m2">
+                    <div class="dot"></div>
+                    <div>25</div>
+                    <div>Padrões</div>
+                </div>
+                <div class="milestone" id="m3">
+                    <div class="dot"></div>
+                    <div>50</div>
+                    <div>Tom</div>
+                </div>
+                <div class="milestone" id="m4">
+                    <div class="dot"></div>
+                    <div>100</div>
+                    <div>Fine-tuning!</div>
+                </div>
+                <div class="milestone" id="m5">
+                    <div class="dot"></div>
+                    <div>250</div>
+                    <div>Maestria</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="data-section">
+            <h3>⚡ Ações</h3>
+            <div class="actions-bar">
+                <button class="action-btn primary" onclick="exportJSONL()">📦 Exportar JSONL (Unsloth)</button>
+                <button class="action-btn" onclick="exportJSON()">📄 Exportar JSON</button>
+                <button class="action-btn" onclick="importData()">📥 Importar dados</button>
+                <button class="action-btn danger" onclick="clearAll()">🗑 Limpar tudo</button>
+            </div>
+            <input type="file" id="importFile" accept=".json,.jsonl" style="display:none;" onchange="handleImport(event)">
+        </div>
+
+        <!-- Data Table -->
+        <div class="data-section">
+            <h3>📋 Pares de Treinamento</h3>
+            <div id="tableContainer"></div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        Auth.requireAuth();
+        const S = Auth.getSession();
+        if (S.role !== 'admin') { window.location.href = 'app.html'; }
+
+        const TRAIN_KEY = 'cs_training_dataset';
+        const FINE_TUNE_MIN = 100;
+
+        function getData() {
+            try { return JSON.parse(localStorage.getItem(TRAIN_KEY) || '[]'); } catch { return []; }
+        }
+
+        function render() {
+            const data = getData();
+            const total = data.length;
+            const totalWords = data.reduce((sum, d) => sum + (d.output || '').split(/\s+/).length, 0);
+            const avg = total > 0 ? Math.round(totalWords / total) : 0;
+            const pct = Math.min(100, Math.round((total / FINE_TUNE_MIN) * 100));
+
+            // Stats
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statWords').textContent = totalWords.toLocaleString('pt-BR');
+            document.getElementById('statAvg').textContent = avg;
+
+            // Status
+            const statusEl = document.getElementById('statStatus');
+            const statusCard = document.getElementById('cardStatus');
+            if (total >= FINE_TUNE_MIN) {
+                statusEl.textContent = '✅';
+                statusCard.classList.add('ready');
+            } else if (total >= 50) {
+                statusEl.textContent = '🔶';
+                statusCard.classList.add('warn');
+            } else {
+                statusEl.textContent = '⏳';
+            }
+
+            // Progress
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressFill').dataset.label = pct + '%';
+            document.getElementById('progressLabel').textContent = `${total} / ${FINE_TUNE_MIN} exemplos`;
+
+            // Milestones
+            const thresholds = [10, 25, 50, 100, 250];
+            thresholds.forEach((t, i) => {
+                const el = document.getElementById('m' + (i + 1));
+                if (total >= t) el.classList.add('reached');
+            });
+
+            // Table
+            const container = document.getElementById('tableContainer');
+            if (total === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🧠</div>
+                        <h3>Nenhum dado de treinamento ainda</h3>
+                        <p>Use o Assistente IA no Creative Studio com a chave OpenRouter configurada. Cada resposta gerará automaticamente um par de treinamento aqui.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = `<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Prompt</th>
+                        <th>Resposta (preview)</th>
+                        <th>Plataforma</th>
+                        <th>Data</th>
+                        <th>Palavras</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            data.slice().reverse().forEach((d, idx) => {
+                const num = total - idx;
+                const words = (d.output || '').split(/\s+/).length;
+                const inputPreview = (d.input || '').slice(0, 80);
+                const outputPreview = (d.output || '').slice(0, 100);
+                const platform = d.platform || 'geral';
+                const tagClass = platform === 'youtube' ? 'tag-youtube' : platform === 'instagram' ? 'tag-instagram' : 'tag-default';
+                const date = d.created_at ? new Date(d.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+                const rowId = `row_${idx}`;
+
+                html += `
+                    <tr style="cursor:pointer;" onclick="toggleExpand('${rowId}')">
+                        <td style="color:#555;font-family:'JetBrains Mono',monospace;font-size:11px;">${num}</td>
+                        <td class="truncate">${esc(inputPreview)}...</td>
+                        <td class="truncate">${esc(outputPreview)}...</td>
+                        <td><span class="tag ${tagClass}">${platform}</span></td>
+                        <td style="color:#666;font-size:12px;white-space:nowrap;">${date}</td>
+                        <td style="color:#888;font-family:'JetBrains Mono',monospace;font-size:12px;">${words}</td>
+                    </tr>
+                    <tr class="expand-row" id="${rowId}">
+                        <td colspan="6" style="padding:0 12px 16px;">
+                            <div class="expand-label">📥 INPUT (Prompt do Usuário)</div>
+                            <div class="expand-content">${esc(d.input || '')}</div>
+                            <div class="expand-label" style="margin-top:12px;">📤 OUTPUT (Resposta do Claude)</div>
+                            <div class="expand-content">${esc(d.output || '')}</div>
+                        </td>
+                    </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function esc(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function toggleExpand(id) {
+            document.getElementById(id)?.classList.toggle('show');
+        }
+
+        // ── Export ──
+        function exportJSONL() {
+            const data = getData();
+            if (!data.length) { alert('Nenhum dado para exportar'); return; }
+            const jsonl = data.map(d => JSON.stringify({
+                instruction: d.instruction,
+                input: d.input,
+                output: d.output,
+            })).join('\n');
+            download(jsonl, `llama3-training-${data.length}ex-${dateStr()}.jsonl`, 'application/jsonl');
+        }
+
+        function exportJSON() {
+            const data = getData();
+            if (!data.length) { alert('Nenhum dado para exportar'); return; }
+            download(JSON.stringify(data, null, 2), `training-data-${data.length}ex-${dateStr()}.json`, 'application/json');
+        }
+
+        function download(content, filename, type) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([content], { type }));
+            a.download = filename;
+            a.click();
+        }
+
+        function dateStr() {
+            return new Date().toISOString().slice(0,10);
+        }
+
+        // ── Import ──
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImport(ev) {
+            const file = ev.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    let imported;
+                    if (file.name.endsWith('.jsonl')) {
+                        imported = e.target.result.split('\n').filter(Boolean).map(l => JSON.parse(l));
+                    } else {
+                        imported = JSON.parse(e.target.result);
+                        if (!Array.isArray(imported)) imported = [imported];
+                    }
+                    const existing = getData();
+                    const merged = [...existing, ...imported];
+                    localStorage.setItem(TRAIN_KEY, JSON.stringify(merged));
+                    render();
+                    alert(`✅ ${imported.length} exemplos importados! Total: ${merged.length}`);
+                } catch (err) {
+                    alert('❌ Erro ao importar: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            ev.target.value = '';
+        }
+
+        // ── Clear ──
+        function clearAll() {
+            if (!confirm('⚠️ Limpar TODOS os dados de treinamento?\nEsta ação é irreversível!\n\nDica: exporte antes.')) return;
+            localStorage.removeItem(TRAIN_KEY);
+            render();
+        }
+
+        render();
+    </script>
+</body>
+</html>
