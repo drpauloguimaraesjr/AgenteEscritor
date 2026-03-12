@@ -1548,6 +1548,24 @@ select {
     pointer-events: none;
 }
 
+.chat-send-btn.stop-mode {
+    background: var(--red);
+    border-color: var(--red);
+    opacity: 1;
+    pointer-events: auto;
+    animation: pulse-stop 1.5s ease infinite;
+}
+
+.chat-send-btn.stop-mode:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(192, 57, 43, 0.3);
+}
+
+@keyframes pulse-stop {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(192, 57, 43, 0); }
+}
+
 .chat-input-hint {
     font-size: 10px;
     color: var(--text-4);

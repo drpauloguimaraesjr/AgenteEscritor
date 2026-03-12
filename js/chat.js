@@ -7,6 +7,7 @@
 // ─── Chat State ───
 let chatHistory = [];
 let isStreaming = false;
+let abortController = null;
 const CHAT_KEY = 'cs_chat_history';
 
 // ─── Init ───
@@ -176,9 +177,14 @@ function removeThinking() {
 async function generateChatResponse(userMsg) {
     if (isStreaming) return;
     isStreaming = true;
+    abortController = new AbortController();
 
     const sendBtn = document.getElementById('chatSendBtn');
-    sendBtn.disabled = true;
+    sendBtn.disabled = false;
+    sendBtn.classList.add('stop-mode');
+    sendBtn.title = 'Parar geração';
+    sendBtn.onclick = stopGeneration;
+    sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
     showThinking();
     setBadge('loading', 'gerando...');
 
@@ -189,10 +195,33 @@ async function generateChatResponse(userMsg) {
     const rag = document.getElementById('useRag')?.checked ?? true;
     const editorContent = document.getElementById('editor')?.innerText || '';
 
-    // Build context-aware prompt
-    let contextPrompt = userMsg;
+    // System instruction: ask questions first, then generate
+    const briefingInstructions = `[INSTRUÇÕES DO SISTEMA]
+Você é o Assistente IA do Creative Studio, especialista em criação de conteúdo médico para redes sociais.
+
+REGRA FUNDAMENTAL: Na PRIMEIRA mensagem sobre um tema novo, NÃO gere o texto imediatamente. 
+Em vez disso, faça perguntas estratégicas para entender o que o usuário quer:
+
+1. **Estrutura**: Qual formato? (roteiro narrado, lista, storytelling, caso clínico, mito vs verdade?)
+2. **Gancho viral**: Quer um gancho provocativo, educativo, emocional ou de curiosidade?
+3. **Duração**: Quanto tempo de vídeo? (30s, 1min, 3min, 5min, 10min+?)
+4. **Público-alvo**: Pacientes leigos, profissionais de saúde, ou ambos?
+5. **Tom**: Formal, acessível, provocativo, motivacional?
+6. **CTA**: Qual chamada para ação? (agendar consulta, seguir perfil, compartilhar?)
+
+Somente após o usuário responder OU se ele pedir explicitamente "gere agora" / "faça direto", gere o conteúdo completo.
+
+Se o usuário colar um texto pronto, pergunte o que ele quer que você faça com ele (adaptar tom, resumir, expandir, reformular para vídeo, etc.).
+
+[FIM DAS INSTRUÇÕES]
+
+`;
+
+    let contextPrompt = '';
     if (editorContent.trim().length > 0) {
-        contextPrompt = `[CONTEXTO DO EDITOR]\n${editorContent.slice(0, 2000)}\n\n[PEDIDO DO USUÁRIO]\n${userMsg}`;
+        contextPrompt = briefingInstructions + `[TEXTO JÁ EXISTENTE NO EDITOR]\n${editorContent.slice(0, 2000)}\n\n[PEDIDO DO USUÁRIO]\n${userMsg}`;
+    } else {
+        contextPrompt = briefingInstructions + `[PEDIDO DO USUÁRIO]\n${userMsg}`;
     }
 
     const payload = {
@@ -215,6 +244,7 @@ async function generateChatResponse(userMsg) {
             method: 'POST',
             headers,
             body: JSON.stringify(payload),
+            signal: abortController.signal,
         });
 
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -327,8 +357,32 @@ async function generateChatResponse(userMsg) {
     }
 
     isStreaming = false;
-    sendBtn.disabled = false;
+    abortController = null;
+    resetSendButton();
     setBadge(online ? 'online' : 'offline', online ? 'online' : 'offline');
+}
+
+// ─── Stop generation ───
+function stopGeneration() {
+    if (abortController) {
+        abortController.abort();
+        abortController = null;
+    }
+    isStreaming = false;
+    removeThinking();
+    resetSendButton();
+    setBadge(online ? 'online' : 'offline', online ? 'online' : 'offline');
+    toast('Geração interrompida');
+}
+
+function resetSendButton() {
+    const sendBtn = document.getElementById('chatSendBtn');
+    if (!sendBtn) return;
+    sendBtn.disabled = false;
+    sendBtn.classList.remove('stop-mode');
+    sendBtn.title = 'Enviar';
+    sendBtn.onclick = sendChat;
+    sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
 }
 
 // ─── RAG Usage Log ───
