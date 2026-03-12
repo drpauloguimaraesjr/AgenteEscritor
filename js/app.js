@@ -1,5 +1,5 @@
 /**
- * Content Studio — Workspace Logic
+ * Creative Studio — Workspace Logic
  * Conecta ao IPagent local via tunnel.
  */
 
@@ -54,8 +54,8 @@ function openDoc(id) {
     curPlat = p.platform || 'youtube';
     document.getElementById('docTitle').value = p.title || '';
     document.getElementById('editor').innerHTML = p.content || '';
-    document.getElementById('topic').value = p.topic || '';
-    document.getElementById('tone').value = p.tone || 'educativo';
+    const toneEl = document.getElementById('tone');
+    if (toneEl) toneEl.value = p.tone || 'educativo';
     pickPlatform(curPlat, false);
     updateMeta();
     updateSave('Carregado ✓');
@@ -69,8 +69,8 @@ function saveCurrent() {
     p.title = document.getElementById('docTitle').value;
     p.content = document.getElementById('editor').innerHTML;
     p.platform = curPlat;
-    p.tone = document.getElementById('tone').value;
-    p.topic = document.getElementById('topic').value;
+    const toneEl = document.getElementById('tone');
+    if (toneEl) p.tone = toneEl.value;
     p.updatedAt = new Date().toISOString();
     p.words = wordCount();
     saveProj(p);
@@ -156,7 +156,7 @@ function pickPlatform(p, save=true) {
     if (save) autoSave();
 }
 
-function setTopic(t) { document.getElementById('topic').value = t; }
+function setTopic(t) { const el = document.getElementById('topic'); if (el) el.value = t; }
 
 // ─── AI Generation (connected to IPagent) ───
 async function generate() {
