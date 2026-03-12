@@ -104,9 +104,9 @@ function renderMessage(msg) {
 
     const actionsHtml = msg.role === 'assistant' ? `
         <div class="chat-msg-actions">
-            <button onclick="insertMsgToEditor('${msg.id}')">Inserir no editor</button>
-            <button onclick="replaceMsgInEditor('${msg.id}')">Substituir</button>
-            <button onclick="copyMsgContent('${msg.id}')">Copiar</button>
+            <button onclick="insertMsgToEditor('${msg.id}')">📝 Abrir na lousa</button>
+            <button onclick="replaceMsgInEditor('${msg.id}')">↻ Substituir</button>
+            <button onclick="copyMsgContent('${msg.id}')">⎘ Copiar</button>
         </div>
     ` : '';
 
@@ -301,7 +301,7 @@ async function generateChatResponse(userMsg) {
         saveChatHistory();
         logAudit('ai_response', { length: fullResponse.length, platform: curPlat });
 
-        // Add action buttons
+        // Add action buttons + RAG log
         const msgEl = document.getElementById(msgId);
         if (msgEl) {
             const existing = msgEl.querySelector('.chat-msg-actions');
@@ -309,12 +309,20 @@ async function generateChatResponse(userMsg) {
                 const actions = document.createElement('div');
                 actions.className = 'chat-msg-actions';
                 actions.innerHTML = `
-                    <button onclick="insertMsgToEditor('${msgId}')">Inserir no editor</button>
-                    <button onclick="replaceMsgInEditor('${msgId}')">Substituir</button>
-                    <button onclick="copyMsgContent('${msgId}')">Copiar</button>
+                    <button onclick="insertMsgToEditor('${msgId}')">📝 Abrir na lousa</button>
+                    <button onclick="replaceMsgInEditor('${msgId}')">↻ Substituir</button>
+                    <button onclick="copyMsgContent('${msgId}')">⎘ Copiar</button>
                 `;
                 msgEl.querySelector('.chat-msg-content').appendChild(actions);
             }
+
+            // RAG usage log indicator
+            addRagLog(msgEl, rag);
+        }
+
+        // Auto-open the lousa with the generated content
+        if (typeof showEditorWithContent === 'function') {
+            showEditorWithContent(formatContent(fullResponse));
         }
     }
 
@@ -323,23 +331,46 @@ async function generateChatResponse(userMsg) {
     setBadge(online ? 'online' : 'offline', online ? 'online' : 'offline');
 }
 
+// ─── RAG Usage Log ───
+function addRagLog(msgEl, ragUsed) {
+    const logDiv = document.createElement('div');
+    logDiv.className = ragUsed ? 'rag-log' : 'rag-log no-rag';
+    if (ragUsed) {
+        logDiv.innerHTML = `
+            <span class="rag-log-icon">📚</span>
+            <span>IA utilizou a base de conhecimento (RAG) para gerar esta resposta</span>
+        `;
+    } else {
+        logDiv.innerHTML = `
+            <span class="rag-log-icon">💭</span>
+            <span>Resposta gerada sem base de conhecimento (apenas modelo)</span>
+        `;
+    }
+    const content = msgEl.querySelector('.chat-msg-content');
+    if (content) content.appendChild(logDiv);
+}
+
 // ─── Message actions ───
 function insertMsgToEditor(msgId) {
     const msg = chatHistory.find(m => m.id === msgId);
     if (!msg) return;
-    const ed = document.getElementById('editor');
-    ed.innerHTML += (ed.innerText.trim() ? '\n\n---\n\n' : '') + formatContent(msg.content);
-    autoSave();
-    toast('Inserido no editor');
+    // Open lousa with content appended
+    if (typeof showEditorWithContent === 'function') {
+        const ed = document.getElementById('editor');
+        const existing = ed ? ed.innerHTML : '';
+        showEditorWithContent(existing + (existing.trim() ? '<br><hr><br>' : '') + formatContent(msg.content));
+    }
+    toast('Aberto na lousa');
     logAudit('insert_to_editor', { msgId, preview: msg.content.slice(0, 40) });
 }
 
 function replaceMsgInEditor(msgId) {
     const msg = chatHistory.find(m => m.id === msgId);
     if (!msg) return;
-    document.getElementById('editor').innerHTML = formatContent(msg.content);
-    autoSave();
-    toast('Conteúdo substituído');
+    if (typeof showEditorWithContent === 'function') {
+        showEditorWithContent(formatContent(msg.content));
+    }
+    toast('Conteúdo substituído na lousa');
     logAudit('replace_editor', { msgId });
 }
 

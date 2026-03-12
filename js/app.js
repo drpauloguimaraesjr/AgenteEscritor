@@ -3,6 +3,35 @@
  * Conecta ao IPagent local via tunnel.
  */
 
+// ─── Editor/Lousa toggle ───
+function toggleEditor(forceState) {
+    const pane = document.getElementById('editorPane');
+    if (!pane) return;
+    if (typeof forceState === 'boolean') {
+        pane.classList.toggle('hidden', !forceState);
+    } else {
+        pane.classList.toggle('hidden');
+    }
+}
+
+function showEditorWithContent(html, title) {
+    const pane = document.getElementById('editorPane');
+    const editor = document.getElementById('editor');
+    const titleEl = document.getElementById('docTitle');
+    if (!pane || !editor) return;
+    
+    // Open the lousa
+    pane.classList.remove('hidden');
+    
+    // Set content
+    if (html) editor.innerHTML = html;
+    if (title && titleEl) titleEl.value = title;
+    
+    // Auto-save
+    updateMeta();
+    autoSave();
+}
+
 if (!Auth.requireAuth()) throw new Error('!auth');
 
 const S = Auth.getSession();

@@ -19,159 +19,159 @@
                     <span class="sidebar-brand-text">Creative Studio</span>
                 </div>
                 <button class="sidebar-new-btn" onclick="createNewProject()">
-                    <span>+</span> Novo documento
+                    <span>+</span> Nova conversa
                 </button>
             </div>
 
-            <div class="sidebar-nav">
-                <a class="sidebar-nav-item active" href="app.html">
-                    <span class="nav-icon">W</span> Workspace
-                </a>
-                <a class="sidebar-nav-item" href="settings.html">
-                    <span class="nav-icon">S</span> Configurações
-                </a>
-            </div>
-
-            <div class="sidebar-label">Documentos</div>
+            <div class="sidebar-label">Projetos</div>
 
             <div class="sidebar-files" id="fileList">
                 <!-- populated by JS -->
             </div>
 
-            <div class="sidebar-footer">
-                <div class="sidebar-avatar" id="sidebarAvatar" onclick="Auth.logout()">P</div>
+            <!-- Profile footer with hover popover -->
+            <div class="sidebar-footer" id="profileArea">
+                <div class="sidebar-avatar" id="sidebarAvatar">P</div>
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name" id="sidebarName">Dr. Paulo</div>
                     <div class="sidebar-user-role" id="sidebarRole">admin</div>
                 </div>
-                <button class="sidebar-logout" onclick="Auth.logout()" title="Sair">Sair</button>
+                <!-- Popover menu on hover -->
+                <div class="profile-popover" id="profilePopover">
+                    <a class="popover-item" href="settings.html">
+                        <span>⚙</span> Configurações
+                    </a>
+                    <a class="popover-item" href="settings.html#users">
+                        <span>👥</span> Gerenciar usuários
+                    </a>
+                    <div class="popover-divider"></div>
+                    <button class="popover-item popover-logout" onclick="Auth.logout()">
+                        <span>↗</span> Sair
+                    </button>
+                </div>
             </div>
         </aside>
 
-        <!-- MAIN -->
+        <!-- MAIN CONTENT: Chat (center) + Editor/Lousa (right, hidden) -->
         <div class="main-area">
-            <!-- Topbar -->
-            <div class="topbar">
-                <div class="topbar-left">
-                    <input type="text" class="topbar-title" id="docTitle" placeholder="Sem título" oninput="autoSave()">
-                </div>
-                <div class="topbar-right">
-                    <span class="topbar-tag badge-yt" id="platformTag">YT</span>
-                    <span class="status-badge status-offline" id="agentBadge">
-                        <span id="agentBadgeIcon">●</span> <span id="agentBadgeText">offline</span>
+            <!-- Chat Column (center — always visible) -->
+            <div class="chat-column" id="chatColumn">
+                <!-- Chat Header -->
+                <div class="ai-header">
+                    <span class="ai-header-title">
+                        <span class="ai-mode-icon">💬</span>
+                        Assistente IA
                     </span>
-                    <button class="topbar-btn" onclick="downloadProject()" title="Baixar .txt">↓</button>
-                    <button class="topbar-btn" onclick="confirmDelete()" title="Excluir">×</button>
+                    <div class="ai-header-actions">
+                        <span class="status-badge status-online" id="ragBadge" style="display:none;">RAG · <span id="kbCount">0</span></span>
+                        <span class="status-badge status-offline" id="agentBadge">
+                            <span id="agentBadgeIcon">●</span> <span id="agentBadgeText">offline</span>
+                        </span>
+                        <button class="topbar-btn ai-settings-btn" onclick="toggleAiSettings()" title="Configurações da geração" id="aiSettingsToggle">⚙</button>
+                    </div>
+                </div>
+
+                <!-- Collapsible settings panel -->
+                <div class="ai-settings-panel" id="aiSettingsPanel">
+                    <div class="ai-settings-row">
+                        <div class="form-group">
+                            <label>Plataforma</label>
+                            <div class="platform-pills">
+                                <button class="pill active" data-p="youtube" onclick="pickPlatform('youtube')">YouTube</button>
+                                <button class="pill" data-p="instagram" onclick="pickPlatform('instagram')">Reels</button>
+                                <button class="pill" data-p="carousel" onclick="pickPlatform('carousel')">Carrossel</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-settings-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div class="form-group">
+                            <label>Tom</label>
+                            <select id="tone">
+                                <option value="educativo">Educativo</option>
+                                <option value="storytelling">Storytelling</option>
+                                <option value="provocativo">Provocativo</option>
+                                <option value="motivacional">Motivacional</option>
+                                <option value="mito_verdade">Mito vs Verdade</option>
+                                <option value="lista">Lista / Tópicos</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="durGroup">
+                            <label>Duração</label>
+                            <select id="dur">
+                                <option value="60">60s</option>
+                                <option value="180">3 min</option>
+                                <option value="300" selected>5 min</option>
+                                <option value="600">10 min</option>
+                                <option value="900">15+ min</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="toggle-row">
+                        <label>Usar base de conhecimento (RAG)</label>
+                        <input type="checkbox" class="toggle" id="useRag" checked>
+                    </div>
+                </div>
+
+                <!-- Chat messages area -->
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-welcome">
+                        <div class="chat-welcome-icon">
+                            <svg fill="none" viewBox="0 0 99 99" width="48" height="48"><path d="M98.9485 98.2746C98.9485 98.6491 98.6491 98.9486 98.2746 98.9486H0.673964C0.299499 98.9486 0 98.6491 0 98.2746V0.67401C0 0.299545 0.299499 0 0.673964 0H98.2746C98.6491 0 98.9485 0.299545 98.9485 0.67401V98.2746ZM20.4456 86.5464L30.8559 93.4365C31.3951 93.796 32.0242 93.9907 32.6682 93.9907H93.4215C93.8709 93.9907 94.2303 93.6312 94.2303 93.1819V5.58699C94.2303 5.00282 93.766 4.53851 93.1968 4.53851L44.8309 4.68831C44.3366 4.68831 43.9771 5.15265 44.0969 5.63197C44.1119 5.69188 44.3217 5.82667 44.7261 6.03637C45.0257 6.20114 45.3102 6.62055 45.5648 7.30957C48.4706 15.0086 45.1005 18.2739 38.3152 22.1234C33.2375 25.0142 28.9985 27.3959 25.6134 29.2682C24.8944 29.6726 24.8644 30.6911 25.5684 31.1105C31.3352 34.6006 36.2631 37.8659 40.3373 40.9365C44.2467 43.8873 45.3851 47.9165 43.7225 53.0242C43.363 54.1327 41.6554 56.0949 40.9514 57.4429C40.6968 57.9372 40.8166 58.5514 41.2659 58.8959C44.007 61.0528 45.0855 64.0036 44.4864 67.7632C44.082 70.2646 42.2695 72.4964 39.0491 74.4436C34.0463 77.4693 28.3394 80.6298 20.4756 85.423C20.0562 85.6776 20.0412 86.2767 20.4456 86.5464ZM23.6961 4.68831H5.76673C5.30239 4.68831 4.91284 5.07772 4.91284 5.54206V93.2418C4.91284 93.6612 5.24237 93.9907 5.66177 93.9907H10.6048C11.0541 93.9907 11.3986 93.5713 11.3087 93.1369C10.9792 91.4743 11.2787 89.3773 12.1924 86.8459C12.3572 86.4115 12.4321 85.9472 12.4471 85.4978C12.4621 85.0185 12.0726 83.0413 11.2787 79.5513C10.0505 74.1291 12.3573 70.4743 16.8359 66.9693C21.1648 63.5692 25.5683 60.6633 30.017 58.2518C30.6161 57.9222 30.6611 57.0834 30.092 56.709L17.6596 48.4707C17.4949 48.3659 17.3602 48.2311 17.2404 48.0963C12.2226 41.9101 11.8481 36.1883 16.102 30.9009C16.5514 30.3317 16.5962 29.5528 16.2068 28.9387C11.878 22.2432 11.833 15.398 17.9143 10.2753C19.7118 8.76246 21.734 7.1897 23.9808 5.58699C24.3702 5.3024 24.1754 4.68831 23.6961 4.68831Z" fill="hsl(45, 5%, 10%)" opacity="0.15"/></svg>
+                        </div>
+                        <h3>Creative Studio</h3>
+                        <p>Seu assistente de criação de conteúdo. Peça para criar, refinar ou reescrever textos para vídeo.</p>
+                        <div class="chat-suggestions">
+                            <button class="chip" onclick="sendSuggestion('Crie um roteiro de 5 min sobre tirzepatida para emagrecimento')">Roteiro sobre tirzepatida</button>
+                            <button class="chip" onclick="sendSuggestion('Crie um script para Reels sobre testosterona baixa: sinais que todo homem ignora')">Reels: testosterona</button>
+                            <button class="chip" onclick="sendSuggestion('Escreva um texto educativo sobre resistência à insulina e ganho de peso')">Resistência à insulina</button>
+                            <button class="chip" onclick="sendSuggestion('Reescreva o texto do editor com tom mais provocativo e direto')">Reescrever com outro tom</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat input -->
+                <div class="chat-input-area">
+                    <div class="chat-input-wrap">
+                        <textarea class="chat-input" id="chatInput" placeholder="Peça para criar, editar ou refinar seu texto..." rows="1" onkeydown="handleChatKey(event)" oninput="autoResizeInput(this)"></textarea>
+                        <button class="chat-send-btn" id="chatSendBtn" onclick="sendChat()" title="Enviar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </div>
+                    <div class="chat-input-hint">Enter para enviar · Shift+Enter para nova linha</div>
                 </div>
             </div>
 
-            <!-- Content split: editor + AI Chat -->
-            <div class="content-split">
-                <!-- Editor -->
-                <div class="editor-pane">
-                    <div class="editor-toolbar">
-                        <button class="ed-btn" onclick="fmt('bold')" title="Negrito"><b>B</b></button>
-                        <button class="ed-btn" onclick="fmt('italic')" title="Itálico"><i>I</i></button>
-                        <button class="ed-btn" onclick="fmt('underline')" title="Sublinhado"><u>U</u></button>
-                        <span class="ed-sep"></span>
-                        <button class="ed-btn" onclick="fmt('formatBlock','H2')" title="Título">H</button>
-                        <button class="ed-btn" onclick="fmt('insertUnorderedList')" title="Lista">≡</button>
-                        <span class="ed-sep"></span>
-                        <button class="ed-btn" onclick="copyEditorContent()" title="Copiar">⎘</button>
+            <!-- Editor/Lousa Column (right — hidden by default, opens when AI generates) -->
+            <div class="editor-pane hidden" id="editorPane">
+                <div class="topbar">
+                    <div class="topbar-left">
+                        <input type="text" class="topbar-title" id="docTitle" placeholder="Sem título" oninput="autoSave()">
                     </div>
-                    <div class="editor-scroll">
-                        <div class="editor-canvas" id="editor" contenteditable="true" oninput="autoSave()"></div>
-                    </div>
-                    <div class="editor-status">
-                        <div class="status-group">
-                            <span><span id="wc">0</span> palavras</span>
-                            <span>~<span id="rt">0</span> min leitura</span>
-                        </div>
-                        <div class="status-group">
-                            <span id="saveIndicator">Salvo ✓</span>
-                        </div>
+                    <div class="topbar-right">
+                        <span class="topbar-tag badge-yt" id="platformTag">YT</span>
+                        <button class="topbar-btn" onclick="copyEditorContent()" title="Copiar">⎘</button>
+                        <button class="topbar-btn" onclick="downloadProject()" title="Baixar .txt">↓</button>
+                        <button class="topbar-btn" onclick="toggleEditor()" title="Fechar lousa">✕</button>
                     </div>
                 </div>
-
-                <!-- AI Chat Panel -->
-                <div class="ai-pane" id="aiPane">
-                    <!-- Chat Header with mode toggle -->
-                    <div class="ai-header">
-                        <span class="ai-header-title">
-                            <span class="ai-mode-icon">💬</span>
-                            Assistente IA
-                        </span>
-                        <div class="ai-header-actions">
-                            <span class="status-badge status-online" id="ragBadge" style="display:none;">RAG · <span id="kbCount">0</span></span>
-                            <button class="topbar-btn ai-settings-btn" onclick="toggleAiSettings()" title="Configurações da geração" id="aiSettingsToggle">⚙</button>
-                        </div>
+                <div class="editor-toolbar">
+                    <button class="ed-btn" onclick="fmt('bold')" title="Negrito"><b>B</b></button>
+                    <button class="ed-btn" onclick="fmt('italic')" title="Itálico"><i>I</i></button>
+                    <button class="ed-btn" onclick="fmt('underline')" title="Sublinhado"><u>U</u></button>
+                    <span class="ed-sep"></span>
+                    <button class="ed-btn" onclick="fmt('formatBlock','H2')" title="Título">H</button>
+                    <button class="ed-btn" onclick="fmt('insertUnorderedList')" title="Lista">≡</button>
+                </div>
+                <div class="editor-scroll">
+                    <div class="editor-canvas" id="editor" contenteditable="true" oninput="autoSave()"></div>
+                </div>
+                <div class="editor-status">
+                    <div class="status-group">
+                        <span><span id="wc">0</span> palavras</span>
+                        <span>~<span id="rt">0</span> min leitura</span>
                     </div>
-
-                    <!-- Collapsible settings panel -->
-                    <div class="ai-settings-panel" id="aiSettingsPanel">
-                        <div class="ai-settings-row">
-                            <div class="form-group">
-                                <label>Plataforma</label>
-                                <div class="platform-pills">
-                                    <button class="pill active" data-p="youtube" onclick="pickPlatform('youtube')">YouTube</button>
-                                    <button class="pill" data-p="instagram" onclick="pickPlatform('instagram')">Reels</button>
-                                    <button class="pill" data-p="carousel" onclick="pickPlatform('carousel')">Carrossel</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ai-settings-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                            <div class="form-group">
-                                <label>Tom</label>
-                                <select id="tone">
-                                    <option value="educativo">Educativo</option>
-                                    <option value="storytelling">Storytelling</option>
-                                    <option value="provocativo">Provocativo</option>
-                                    <option value="motivacional">Motivacional</option>
-                                    <option value="mito_verdade">Mito vs Verdade</option>
-                                    <option value="lista">Lista / Tópicos</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="durGroup">
-                                <label>Duração</label>
-                                <select id="dur">
-                                    <option value="60">60s</option>
-                                    <option value="180">3 min</option>
-                                    <option value="300" selected>5 min</option>
-                                    <option value="600">10 min</option>
-                                    <option value="900">15+ min</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="toggle-row">
-                            <label>Usar base de conhecimento (RAG)</label>
-                            <input type="checkbox" class="toggle" id="useRag" checked>
-                        </div>
-                    </div>
-
-                    <!-- Chat messages area -->
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-welcome">
-                            <div class="chat-welcome-icon">✦</div>
-                            <h3>Creative Studio</h3>
-                            <p>Seu assistente de criação de conteúdo. Peça para criar, refinar ou reescrever textos para vídeo.</p>
-                            <div class="chat-suggestions">
-                                <button class="chip" onclick="sendSuggestion('Crie um roteiro de 5 min sobre tirzepatida para emagrecimento')">Roteiro sobre tirzepatida</button>
-                                <button class="chip" onclick="sendSuggestion('Crie um script para Reels sobre testosterona baixa: sinais que todo homem ignora')">Reels: testosterona</button>
-                                <button class="chip" onclick="sendSuggestion('Escreva um texto educativo sobre resistência à insulina e ganho de peso')">Resistência à insulina</button>
-                                <button class="chip" onclick="sendSuggestion('Reescreva o texto do editor com tom mais provocativo e direto')">Reescrever com outro tom</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chat input -->
-                    <div class="chat-input-area">
-                        <div class="chat-input-wrap">
-                            <textarea class="chat-input" id="chatInput" placeholder="Peça para criar, editar ou refinar seu texto..." rows="1" onkeydown="handleChatKey(event)" oninput="autoResizeInput(this)"></textarea>
-                            <button class="chat-send-btn" id="chatSendBtn" onclick="sendChat()" title="Enviar">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                            </button>
-                        </div>
-                        <div class="chat-input-hint">Enter para enviar · Shift+Enter para nova linha</div>
+                    <div class="status-group">
+                        <span id="saveIndicator">Carregado ✓</span>
                     </div>
                 </div>
             </div>
@@ -185,7 +185,6 @@
 
     <!-- Mobile FABs -->
     <button class="mobile-fab fab-sidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">≡</button>
-    <button class="mobile-fab fab-ai" onclick="document.getElementById('aiPane').classList.toggle('open')">IA</button>
 
     <!-- Delete modal -->
     <div class="modal-bg" id="delModal">

@@ -315,13 +315,21 @@ body {
 .badge-ig { background: rgba(131,58,180,0.12); color: #b37ae0; }
 .badge-cr { background: var(--violet-dim); color: var(--violet); }
 
-/* Sidebar footer */
+/* Sidebar footer with profile popover */
 .sidebar-footer {
     padding: 10px 12px;
     border-top: 1px solid var(--border);
     display: flex;
     align-items: center;
     gap: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.sidebar-footer:hover .profile-popover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .sidebar-avatar {
@@ -336,7 +344,6 @@ body {
     font-weight: 700;
     color: #FFFFFF;
     flex-shrink: 0;
-    cursor: pointer;
 }
 
 .sidebar-user-info {
@@ -358,33 +365,88 @@ body {
     color: var(--text-3);
 }
 
-.sidebar-logout {
+/* Profile popover */
+.profile-popover {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 8px;
+    right: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-lg);
     padding: 6px;
-    border: none;
-    background: none;
-    color: var(--text-3);
-    cursor: pointer;
-    border-radius: var(--r-xs);
-    font-size: 14px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
     transition: all var(--speed) var(--ease);
+    z-index: 100;
 }
 
-.sidebar-logout:hover { color: var(--red); background: var(--red-dim); }
+.popover-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--speed) var(--ease);
+    border: none;
+    background: none;
+    width: 100%;
+    font-family: inherit;
+}
+
+.popover-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-1);
+}
+
+.popover-item span {
+    font-size: 14px;
+    width: 20px;
+    text-align: center;
+}
+
+.popover-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+}
+
+.popover-logout:hover {
+    color: var(--red);
+    background: var(--red-dim);
+}
 
 /* ============================================
-   MAIN CONTENT AREA
+   MAIN CONTENT AREA — Chat center + Editor right
    ============================================ */
 .main-area {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     overflow: hidden;
     background: var(--bg-base);
 }
 
-/* Topbar */
+/* Chat column (center — always visible) */
+.chat-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+    background: var(--bg-surface);
+}
+
+/* Topbar (inside editor-pane) */
 .topbar {
-    height: 48px;
-    padding: 0 24px;
+    height: 44px;
+    padding: 0 20px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -447,19 +509,54 @@ body {
 
 .topbar-btn:hover { color: var(--text-1); background: var(--bg-hover); }
 
-/* Content split */
-.content-split {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    overflow: hidden;
-}
-
-/* Editor */
+/* Editor / Lousa (right column — hidden by default) */
 .editor-pane {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    width: 50vw;
+    max-width: 680px;
+    min-width: 400px;
+    border-left: 1px solid var(--border);
+    background: var(--bg-surface);
+    transition: width 0.3s var(--ease), opacity 0.3s var(--ease);
+}
+
+.editor-pane.hidden {
+    width: 0;
+    min-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    border-left: none;
+}
+
+/* RAG log indicator */
+.rag-log {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    margin: 4px 16px;
+    background: var(--green-dim);
+    border-radius: var(--r-sm);
+    font-size: 11px;
+    color: var(--green);
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+}
+
+.rag-log.no-rag {
+    background: var(--bg-elevated);
+    color: var(--text-3);
+}
+
+.rag-log-icon {
+    font-size: 13px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .editor-toolbar {
