@@ -41,9 +41,20 @@
                     <a class="popover-item" href="settings.html">
                         <span>⚙</span> Configurações
                     </a>
-                    <a class="popover-item" href="settings.html#users">
+                    <a class="popover-item" href="settings.html#users" data-admin-only>
                         <span>👥</span> Gerenciar usuários
                     </a>
+                    <a class="popover-item" href="architecture.html" target="_blank" data-admin-only>
+                        <span>🧠</span> Arquitetura Neural
+                    </a>
+                    <div class="popover-divider" data-admin-only></div>
+                    <div class="popover-item popover-folder-hint" onclick="copyFolderPath()" title="Clique para copiar o caminho" data-admin-only>
+                        <span>📁</span>
+                        <div style="font-size:11px;line-height:1.4;">
+                            <strong>PDFs aqui:</strong><br>
+                            <code style="font-size:9px;color:var(--amber);word-break:break-all;">ipagent\data\artigos_cientificos\</code>
+                        </div>
+                    </div>
                     <div class="popover-divider"></div>
                     <button class="popover-item popover-logout" onclick="Auth.logout()">
                         <span>↗</span> Sair
@@ -52,6 +63,24 @@
             </div>
         </aside>
 
+        <script>
+        // Copy folder path to clipboard
+        function copyFolderPath() {
+            const path = 'C:\\Users\\Cairo\\.gemini\\antigravity\\scratch\\ipagent\\data\\artigos_cientificos\\';
+            navigator.clipboard.writeText(path).then(() => {
+                const hint = document.querySelector('.popover-folder-hint strong');
+                if (hint) { hint.textContent = '✅ Copiado!'; setTimeout(() => hint.textContent = 'PDFs aqui:', 2000); }
+            });
+        }
+
+        // Hide admin-only items for non-admin users
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role !== 'admin') {
+                document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
+            }
+        });
+        </script>       
         <!-- MAIN CONTENT: Chat (center) + Editor/Lousa (right, hidden) -->
         <div class="main-area">
             <!-- Chat Column (center — always visible) -->
