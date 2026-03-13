@@ -1,31 +1,28 @@
-﻿@echo off
+@echo off
 echo =======================================
-echo 🧠 INICIANDO SEU AGENTE IA (LLAMA)
+echo    INICIANDO SEU AGENTE IA (IPagent)
 echo =======================================
 echo.
 echo Procurando a pasta do IPagent...
 
-if exist "ipagent\main.py" (
-    cd ipagent
-) else if exist "..\ipagent\main.py" (
-    cd ..\ipagent
-) else if exist "C:\Users\Cairo\.gemini\antigravity\scratch\ipagent\main.py" (
-    cd /d "C:\Users\Cairo\.gemini\antigravity\scratch\ipagent"
-) else (
-    echo [ERRO] Pasta do ipagent nao encontrada na raiz!
+set "AGENT_DIR=%~dp0ipagent"
+
+if not exist "%AGENT_DIR%\main.py" (
+    echo [ERRO] Arquivo main.py nao encontrado em %AGENT_DIR%
     pause
-    exit
+    exit /b 1
 )
 
-echo Ativando ambiente virtual do Python...
-if exist "venv\Scripts\activate.bat" (
-    call "venv\Scripts\activate.bat"
-) else (
-    echo Aviso: Ambiente virtual (venv) nao encontrado!
-)
+cd /d "%AGENT_DIR%"
+echo Pasta encontrada: %AGENT_DIR%
+echo.
+
+echo Verificando dependencias...
+pip install -q flask flask-cors PyPDF2
 
 echo.
 echo Iniciando Servidor IPagent Local na Porta 5000...
+echo.
 python main.py
 
 pause
