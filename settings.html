@@ -21,7 +21,7 @@
         <h2>⚙️ Configurações</h2>
 
         <!-- Agent connection -->
-        <div class="settings-card">
+        <div class="settings-card" data-admin-only>
             <h3>🔗 Conexão com o Agente (RAG Local)</h3>
             <div class="form-group">
                 <label>URL do Tunnel</label>
@@ -40,7 +40,7 @@
         </div>
 
         <!-- OpenRouter API (all users) -->
-        <div class="settings-card">
+        <div class="settings-card" data-admin-only>
             <h3>🧠 OpenRouter API (Geração de Texto)</h3>
             <p class="help-text" style="margin-bottom:12px;">
                 O sistema híbrido usa <strong>IPAgent local</strong> para busca RAG e <strong>OpenRouter</strong> para gerar textos com IA de qualidade superior.
@@ -70,7 +70,7 @@
         </div>
 
         <!-- Training Data (all users) -->
-        <div class="settings-card">
+        <div class="settings-card" data-admin-only>
             <h3>🎓 Treinamento do Llama3 (Destilação)</h3>
             <p class="help-text" style="margin-bottom:12px;">
                 Cada resposta do Claude é automaticamente salva como par de treinamento para o seu Llama3 local.
@@ -168,7 +168,10 @@
         const S = Auth.getSession();
 
         // Hide admin features
-        if (S.role !== 'admin') document.getElementById('inviteSection').style.display = 'none';
+        if (S.role !== 'admin') {
+            document.getElementById('inviteSection').style.display = 'none';
+            document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
+        }
 
         // Load settings
         const SK = 'cs_settings';

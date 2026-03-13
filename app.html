@@ -91,8 +91,7 @@
             }
 
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            if (user.role !== 'admin' && false) {
-                // Feature temporarily shown to all
+            if (user.role !== 'admin') {
                 document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
             }
         });
