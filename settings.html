@@ -365,7 +365,7 @@
         updateTrainingStats();
 
         // Hide admin-only items
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const user = JSON.parse(localStorage.getItem('cs_session') || '{}');
         if (user.role !== 'admin') {
             document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
         }
