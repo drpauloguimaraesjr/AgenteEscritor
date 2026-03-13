@@ -1,42 +1,31 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Studio â€” ConfiguraÃ§Ãµes</title>
+    <title>Content Studio — Configurações</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        html, body { overflow: auto !important; height: auto !important; min-height: 100vh; }
-        .settings-shell { max-width: 640px; margin: 0 auto; padding: 24px 16px 80px; }
-        .settings-card { background: var(--bg-2, #1a1a2e); border: 1px solid var(--border, #2a2a3e); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .settings-card h3 { margin: 0 0 14px; font-size: 15px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; color: var(--text-2, #aaa); margin-bottom: 4px; font-weight: 600; }
-        .form-group input, .form-group select { width: 100%; padding: 8px 12px; background: var(--bg-3, #0d0d1a); border: 1px solid var(--border, #2a2a3e); border-radius: 8px; color: var(--text-1, #eee); font-size: 13px; }
-        .help-text { font-size: 11px; color: var(--text-3, #666); margin-top: 4px; }
-        .invite-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    </style>
 </head>
 <body style="overflow:auto;">
     <!-- Simple topbar for settings -->
     <div class="topbar" style="position:sticky;top:0;z-index:10;">
         <div class="topbar-left">
-            <a href="app.html" style="color:var(--text-3);text-decoration:none;font-size:13px;">â† Workspace</a>
+            <a href="app.html" style="color:var(--text-3);text-decoration:none;font-size:13px;">← Workspace</a>
         </div>
         <div class="topbar-right">
-            <button class="btn btn-ghost btn-sm" onclick="Auth.logout()">ðŸšª Sair</button>
+            <button class="btn btn-ghost btn-sm" onclick="Auth.logout()">🚪 Sair</button>
         </div>
     </div>
 
     <div class="settings-shell">
-        <h2>âš™ï¸ ConfiguraÃ§Ãµes</h2>
+        <h2>⚙️ Configurações</h2>
 
         <!-- Agent connection -->
         <div class="settings-card">
-            <h3>ðŸ”— ConexÃ£o com o Agente (RAG Local)</h3>
+            <h3>🔗 Conexão com o Agente</h3>
             <div class="form-group">
                 <label>URL do Tunnel</label>
-                <input type="url" id="agentUrl" placeholder="https://xxxx.Cloudflare Tunnel-free.app">
+                <input type="url" id="agentUrl" placeholder="https://xxxx.ngrok-free.app">
                 <p class="help-text">Cole a URL do tunnel que aponta para o IPagent. Local: <code>http://localhost:5000</code></p>
             </div>
             <div class="form-group">
@@ -44,76 +33,22 @@
                 <input type="text" id="apiKey" placeholder="sk-IPagent-...">
             </div>
             <div style="display:flex;gap:8px;margin-top:8px;">
-                <button class="btn btn-brand btn-sm" onclick="saveConn()">ðŸ’¾ Salvar</button>
-                <button class="btn btn-ghost btn-sm" onclick="testConn()">ðŸ” Testar</button>
+                <button class="btn btn-brand btn-sm" onclick="saveConn()">💾 Salvar</button>
+                <button class="btn btn-ghost btn-sm" onclick="testConn()">🔍 Testar</button>
             </div>
             <div id="connResult" style="margin-top:10px;font-size:12px;"></div>
         </div>
 
-        <!-- OpenRouter API (admin only) -->
-        <div class="settings-card" data-admin-only>
-            <h3>ðŸ§  OpenRouter API (GeraÃ§Ã£o de Texto)</h3>
-            <p class="help-text" style="margin-bottom:12px;">
-                O sistema hÃ­brido usa <strong>IPAgent local</strong> para busca RAG e <strong>OpenRouter</strong> para gerar textos com IA de qualidade superior.
-                Aceita pagamento via <strong>MetaMask / Crypto</strong>. Cada interaÃ§Ã£o gera dados de treinamento para o seu Llama3 local.
-            </p>
-            <div class="form-group">
-                <label>Chave da API OpenRouter</label>
-                <input type="password" id="openrouterKey" placeholder="sk-or-v1-...">
-                <p class="help-text">Obtenha em <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--brand);">openrouter.ai/keys</a> â€” aceita MetaMask, cartÃ£o e crypto</p>
-            </div>
-            <div class="form-group">
-                <label>Modelo</label>
-                <select id="openrouterModel" style="background:var(--bg-2);border:1px solid var(--border);color:var(--text-1);padding:6px 10px;border-radius:6px;width:100%;">
-                    <option value="anthropic/claude-3-opus">Claude 3 Opus (mÃ¡xima qualidade â€” ideal p/ treinamento)</option>
-                    <option value="anthropic/claude-sonnet-4-20250514">Claude Sonnet 4 (equilÃ­brio qualidade/custo)</option>
-                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                    <option value="openai/gpt-4o">GPT-4o (alternativa)</option>
-                    <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku (mais rÃ¡pido/barato)</option>
-                    <option value="meta-llama/llama-3.1-405b-instruct">Llama 3.1 405B (open source!)</option>
-                </select>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-                <button class="btn btn-brand btn-sm" onclick="saveOpenRouter()">ðŸ’¾ Salvar</button>
-                <button class="btn btn-ghost btn-sm" onclick="testOpenRouter()">ðŸ” Testar</button>
-            </div>
-            <div id="openrouterResult" style="margin-top:10px;font-size:12px;"></div>
-        </div>
-
-        <!-- Training Data (admin only) -->
-        <div class="settings-card" data-admin-only>
-            <h3>ðŸŽ“ Treinamento do Llama3 (DestilaÃ§Ã£o)</h3>
-            <p class="help-text" style="margin-bottom:12px;">
-                Cada resposta do Claude Ã© automaticamente salva como par de treinamento para o seu Llama3 local.
-                Quando tiver exemplos suficientes, poderÃ¡ fazer fine-tuning e rodar 100% local.
-            </p>
-            <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;">
-                <div style="background:var(--bg-3);padding:12px 16px;border-radius:8px;flex:1;min-width:120px;">
-                    <div style="font-size:24px;font-weight:700;color:var(--brand);" id="trainCount">0</div>
-                    <div style="font-size:11px;color:var(--text-3);">Pares de treinamento</div>
-                </div>
-                <div style="background:var(--bg-3);padding:12px 16px;border-radius:8px;flex:1;min-width:120px;">
-                    <div style="font-size:24px;font-weight:700;color:var(--green);" id="trainReady">âŒ</div>
-                    <div style="font-size:11px;color:var(--text-3);">Pronto p/ fine-tuning (mÃ­n. 100)</div>
-                </div>
-            </div>
-            <div style="display:flex;gap:8px;">
-                <button class="btn btn-brand btn-sm" onclick="exportTraining()">ðŸ“¦ Exportar Dataset</button>
-                <button class="btn btn-ghost btn-sm" onclick="clearTraining()">ðŸ—‘ Limpar dados</button>
-            </div>
-            <div id="trainResult" style="margin-top:10px;font-size:12px;"></div>
-        </div>
-
         <!-- Change password -->
         <div class="settings-card">
-            <h3>ðŸ” Alterar Senha</h3>
+            <h3>🔐 Alterar Senha</h3>
             <div class="form-group">
                 <label>Senha Atual</label>
-                <input type="password" id="curPw" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                <input type="password" id="curPw" placeholder="••••••••">
             </div>
             <div class="form-group">
                 <label>Nova Senha</label>
-                <input type="password" id="newPw" placeholder="MÃ­nimo 6 caracteres">
+                <input type="password" id="newPw" placeholder="Mínimo 6 caracteres">
             </div>
             <button class="btn btn-brand btn-sm" onclick="changePw()" style="margin-top:6px;">Alterar</button>
             <div id="pwResult" style="margin-top:8px;font-size:12px;"></div>
@@ -121,9 +56,9 @@
 
         <!-- Invite users (admin only) -->
         <div class="settings-card" id="inviteSection">
-            <h3>ðŸ“¨ Convidar UsuÃ¡rio</h3>
+            <h3>📨 Convidar Usuário</h3>
             <p class="help-text" style="margin-bottom:14px;">
-                Convide membros da equipe. Eles receberÃ£o um email ou senha temporÃ¡ria para o primeiro acesso, e serÃ£o obrigados a trocar a senha.
+                Convide membros da equipe. Eles receberão um email ou senha temporária para o primeiro acesso, e serão obrigados a trocar a senha.
             </p>
 
             <div class="invite-row">
@@ -138,9 +73,9 @@
             </div>
             <div class="invite-row" style="margin-top:8px;">
                 <div class="form-group">
-                    <label>Senha TemporÃ¡ria</label>
+                    <label>Senha Temporária</label>
                     <input type="text" id="invPw" placeholder="trocar123">
-                    <p class="help-text">O convidado serÃ¡ obrigado a trocar no primeiro login.</p>
+                    <p class="help-text">O convidado será obrigado a trocar no primeiro login.</p>
                 </div>
                 <div class="form-group">
                     <label>Perfil</label>
@@ -150,7 +85,7 @@
                     </select>
                 </div>
             </div>
-            <button class="btn btn-brand btn-sm" onclick="invite()" style="margin-top:10px;">ðŸ“¨ Enviar Convite</button>
+            <button class="btn btn-brand btn-sm" onclick="invite()" style="margin-top:10px;">📨 Enviar Convite</button>
             <div id="invResult" style="margin-top:8px;font-size:12px;"></div>
 
             <!-- User list -->
@@ -162,10 +97,10 @@
 
         <!-- Data -->
         <div class="settings-card">
-            <h3>ðŸ“¦ Dados</h3>
+            <h3>📦 Dados</h3>
             <div style="display:flex;gap:8px;">
-                <button class="btn btn-ghost btn-sm" onclick="exportAll()">ðŸ“¥ Exportar tudo</button>
-                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('impFile').click()">ðŸ“¤ Importar</button>
+                <button class="btn btn-ghost btn-sm" onclick="exportAll()">📥 Exportar tudo</button>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('impFile').click()">📤 Importar</button>
             </div>
             <input type="file" id="impFile" accept=".json" style="display:none" onchange="handleImp(event)">
         </div>
@@ -179,10 +114,7 @@
         const S = Auth.getSession();
 
         // Hide admin features
-        if (S.role !== 'admin') {
-            document.getElementById('inviteSection').style.display = 'none';
-            document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
-        }
+        if (S.role !== 'admin') document.getElementById('inviteSection').style.display = 'none';
 
         // Load settings
         const SK = 'cs_settings';
@@ -196,23 +128,23 @@
             s.agentUrl = document.getElementById('agentUrl').value.trim().replace(/\/$/,'');
             s.apiKey = document.getElementById('apiKey').value.trim();
             localStorage.setItem(SK, JSON.stringify(s));
-            toast('ðŸ’¾ Salvo!');
+            toast('💾 Salvo!');
         }
 
         async function testConn() {
             const url = document.getElementById('agentUrl').value.trim().replace(/\/$/,'');
             const key = document.getElementById('apiKey').value.trim();
             const el = document.getElementById('connResult');
-            if (!url) { el.innerHTML = '<span style="color:var(--red);">âŒ Informe a URL</span>'; return; }
-            el.innerHTML = '<span style="color:var(--brand);">â³ Testando...</span>';
+            if (!url) { el.innerHTML = '<span style="color:var(--red);">❌ Informe a URL</span>'; return; }
+            el.innerHTML = '<span style="color:var(--brand);">⏳ Testando...</span>';
             try {
                 const h = {}; if (key) h['Authorization'] = `Bearer ${key}`;
                 const r = await fetch(`${url}/api/content/health`, { headers: h, signal: AbortSignal.timeout(8000) });
                 if (r.ok) {
                     const d = await r.json();
-                    el.innerHTML = `<span style="color:var(--green);">âœ… Conectado!</span> Â· ${d.agent_ready?'ðŸŸ¢ Pronto':'ðŸŸ¡ Carregando'} Â· ${d.knowledge_count||0} docs`;
-                } else el.innerHTML = `<span style="color:var(--red);">âŒ HTTP ${r.status}</span>`;
-            } catch { el.innerHTML = '<span style="color:var(--red);">âŒ Sem resposta. Tunnel ativo?</span>'; }
+                    el.innerHTML = `<span style="color:var(--green);">✅ Conectado!</span> · ${d.agent_ready?'🟢 Pronto':'🟡 Carregando'} · ${d.knowledge_count||0} docs`;
+                } else el.innerHTML = `<span style="color:var(--red);">❌ HTTP ${r.status}</span>`;
+            } catch { el.innerHTML = '<span style="color:var(--red);">❌ Sem resposta. Tunnel ativo?</span>'; }
         }
 
         function changePw() {
@@ -221,8 +153,8 @@
             const el = document.getElementById('pwResult');
             const r = Auth.changePassword(cur, nw);
             el.innerHTML = r.success
-                ? '<span style="color:var(--green);">âœ… Senha alterada!</span>'
-                : `<span style="color:var(--red);">âŒ ${r.error}</span>`;
+                ? '<span style="color:var(--green);">✅ Senha alterada!</span>'
+                : `<span style="color:var(--red);">❌ ${r.error}</span>`;
             if (r.success) { document.getElementById('curPw').value=''; document.getElementById('newPw').value=''; }
         }
 
@@ -233,18 +165,18 @@
             const role = document.getElementById('invRole').value;
             const el = document.getElementById('invResult');
 
-            if (!email || !pw) { el.innerHTML = '<span style="color:var(--red);">âŒ Email e senha obrigatÃ³rios</span>'; return; }
-            if (pw.length < 4) { el.innerHTML = '<span style="color:var(--red);">âŒ Senha muito curta</span>'; return; }
+            if (!email || !pw) { el.innerHTML = '<span style="color:var(--red);">❌ Email e senha obrigatórios</span>'; return; }
+            if (pw.length < 4) { el.innerHTML = '<span style="color:var(--red);">❌ Senha muito curta</span>'; return; }
 
             const r = Auth.inviteUser(email, name, pw, role);
             if (r.success) {
-                el.innerHTML = `<span style="color:var(--green);">âœ… Convite criado!</span><br><span style="color:var(--text-3);font-size:11px;">Username: <strong>${r.user.username}</strong> Â· Senha temp: informar pessoalmente ou enviar por email.</span>`;
+                el.innerHTML = `<span style="color:var(--green);">✅ Convite criado!</span><br><span style="color:var(--text-3);font-size:11px;">Username: <strong>${r.user.username}</strong> · Senha temp: informar pessoalmente ou enviar por email.</span>`;
                 document.getElementById('invEmail').value = '';
                 document.getElementById('invName').value = '';
                 document.getElementById('invPw').value = '';
                 renderUsers();
             } else {
-                el.innerHTML = `<span style="color:var(--red);">âŒ ${r.error}</span>`;
+                el.innerHTML = `<span style="color:var(--red);">❌ ${r.error}</span>`;
             }
         }
 
@@ -254,9 +186,9 @@
                 const initial = (u.name||u.username).charAt(0).toUpperCase();
                 const roleCls = {admin:'role-admin',user:'role-user'}[u.role] || 'role-pending';
                 const roleLabel = {admin:'Admin',user:'Colaborador'}[u.role] || u.role;
-                const pending = u.mustChangePassword ? '<span style="color:var(--brand);font-size:10px;"> Â· pendente</span>' : '';
+                const pending = u.mustChangePassword ? '<span style="color:var(--brand);font-size:10px;"> · pendente</span>' : '';
                 const removeBtn = (S.role==='admin' && u.id !== S.id)
-                    ? `<button class="btn btn-danger btn-sm" style="padding:4px 8px;font-size:10px;" onclick="removeUser('${u.id}')">âœ•</button>` : '';
+                    ? `<button class="btn btn-danger btn-sm" style="padding:4px 8px;font-size:10px;" onclick="removeUser('${u.id}')">✕</button>` : '';
                 return `<div class="user-list-item">
                     <div class="user-info">
                         <div class="user-mini-avatar">${initial}</div>
@@ -274,106 +206,13 @@
         }
 
         function removeUser(id) {
-            if (!confirm('Remover este usuÃ¡rio?')) return;
+            if (!confirm('Remover este usuário?')) return;
             Auth.removeUser(id);
             renderUsers();
-            toast('UsuÃ¡rio removido');
+            toast('Usuário removido');
         }
 
         renderUsers();
-
-        // â”€â”€ OpenRouter API Functions â”€â”€
-        function saveOpenRouter() {
-            const key = document.getElementById('openrouterKey').value.trim();
-            const model = document.getElementById('openrouterModel').value;
-            localStorage.setItem('cs_openrouter_api_key', key);
-            localStorage.setItem('cs_openrouter_model', model);
-            toast('ðŸ’¾ OpenRouter configurado!');
-        }
-
-        async function testOpenRouter() {
-            const key = document.getElementById('openrouterKey').value.trim();
-            const model = document.getElementById('openrouterModel').value;
-            const el = document.getElementById('openrouterResult');
-            if (!key) { el.innerHTML = '<span style="color:var(--red);">âŒ Informe a chave</span>'; return; }
-            el.innerHTML = '<span style="color:var(--brand);">â³ Testando...</span>';
-            try {
-                const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${key}`,
-                        'HTTP-Referer': window.location.origin,
-                        'X-Title': 'Creative Studio - Dr. Paulo',
-                    },
-                    body: JSON.stringify({
-                        model: model,
-                        max_tokens: 50,
-                        messages: [{ role: 'user', content: 'Responda apenas: OK' }],
-                        provider: { order: ['Anthropic', 'OpenAI'], allow_fallbacks: true },
-                    }),
-                    signal: AbortSignal.timeout(20000),
-                });
-                if (r.ok) {
-                    const d = await r.json();
-                    const usedModel = d.model || model;
-                    const cost = d.usage ? `Â· ${d.usage.total_tokens || '?'} tokens` : '';
-                    el.innerHTML = `<span style="color:var(--green);">âœ… Conectado!</span> Â· Modelo: ${usedModel} ${cost}`;
-                } else {
-                    const err = await r.json().catch(() => ({}));
-                    el.innerHTML = `<span style="color:var(--red);">âŒ ${err.error?.message || 'HTTP ' + r.status}</span>`;
-                }
-            } catch (e) {
-                el.innerHTML = `<span style="color:var(--red);">âŒ ${e.message}</span>`;
-            }
-        }
-
-        // â”€â”€ Training Data Functions â”€â”€
-        const TRAIN_KEY = 'cs_training_dataset';
-
-        function getTrainingData() {
-            try { return JSON.parse(localStorage.getItem(TRAIN_KEY) || '[]'); } catch { return []; }
-        }
-
-        function updateTrainingStats() {
-            const data = getTrainingData();
-            document.getElementById('trainCount').textContent = data.length;
-            const ready = data.length >= 100;
-            document.getElementById('trainReady').textContent = ready ? 'âœ…' : 'âŒ';
-            document.getElementById('trainReady').style.color = ready ? 'var(--green)' : 'var(--red)';
-        }
-
-        function exportTraining() {
-            const data = getTrainingData();
-            if (!data.length) { toast('Nenhum dado de treinamento ainda'); return; }
-
-            // Export as JSONL (Alpaca format for Unsloth fine-tuning)
-            const jsonl = data.map(d => JSON.stringify({
-                instruction: d.instruction,
-                input: d.input,
-                output: d.output,
-                category: d.category || 'content_generation',
-                created_at: d.created_at,
-            })).join('\n');
-
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([jsonl], { type: 'application/jsonl' }));
-            a.download = `llama3-training-${new Date().toISOString().slice(0,10)}-${data.length}examples.jsonl`;
-            a.click();
-            toast(`ðŸ“¦ ${data.length} exemplos exportados!`);
-        }
-
-        function clearTraining() {
-            if (!confirm('Limpar todos os dados de treinamento? Esta aÃ§Ã£o Ã© irreversÃ­vel.')) return;
-            localStorage.removeItem(TRAIN_KEY);
-            updateTrainingStats();
-            toast('ðŸ—‘ Dados de treinamento limpos');
-        }
-
-        // Load OpenRouter settings
-        document.getElementById('openrouterKey').value = localStorage.getItem('cs_openrouter_api_key') || '';
-        document.getElementById('openrouterModel').value = localStorage.getItem('cs_openrouter_model') || 'anthropic/claude-3-opus';
-        updateTrainingStats();
 
         // Export/Import
         function exportAll() {
@@ -383,7 +222,7 @@
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([JSON.stringify(all,null,2)],{type:'application/json'}));
             a.download = `content-studio-backup-${new Date().toISOString().slice(0,10)}.json`;
-            a.click(); toast(`ðŸ“¥ ${all.length} docs exportados`);
+            a.click(); toast(`📥 ${all.length} docs exportados`);
         }
 
         function handleImp(ev) {
@@ -394,8 +233,8 @@
                     const imp = JSON.parse(e.target.result);
                     if (!Array.isArray(imp)) throw 0;
                     localStorage.setItem('cs_projects', JSON.stringify(imp));
-                    toast(`ðŸ“¤ ${imp.length} docs importados`);
-                } catch { toast('âŒ Arquivo invÃ¡lido'); }
+                    toast(`📤 ${imp.length} docs importados`);
+                } catch { toast('❌ Arquivo inválido'); }
             };
             r.readAsText(f); ev.target.value = '';
         }
@@ -408,4 +247,3 @@
     </script>
 </body>
 </html>
-

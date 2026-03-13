@@ -173,7 +173,7 @@ function removeThinking() {
     if (el) el.remove();
 }
 
-// ─── Generate AI response (HYBRID: RAG local + Claude API) ───
+// ─── Generate AI response ───
 async function generateChatResponse(userMsg) {
     if (isStreaming) return;
     isStreaming = true;
@@ -188,18 +188,17 @@ async function generateChatResponse(userMsg) {
     showThinking();
     setBadge('loading', 'gerando...');
 
-    const ipagentUrl = agentUrl();
-    const ipagentKey = apiKey();
-    const claudeKey = localStorage.getItem('cs_openrouter_api_key') || localStorage.getItem('cs_claude_api_key') || '';
+    const url = agentUrl();
+    const key = apiKey();
     const tone = document.getElementById('tone')?.value || 'educativo';
     const dur = parseInt(document.getElementById('dur')?.value || '300');
     const rag = document.getElementById('useRag')?.checked ?? true;
     const editorContent = document.getElementById('editor')?.innerText || '';
 
-    // ═══════════════════════════════════════════
-    // SYSTEM PROMPT: DNA DE ESTILO DR. PAULO
-    // ═══════════════════════════════════════════
-    const systemPrompt = `Você é o Assistente IA do Creative Studio do Dr. Paulo Guimarães. Você opera com DUAS bases de conhecimento:
+    // System instruction: Neural Architecture — Base Clínica + Base de Voz → Fusão → Saída
+    const briefingInstructions = `[ARQUITETURA NEURAL — DR. PAULO GUIMARÃES]
+
+Você é o Assistente IA do Creative Studio do Dr. Paulo Guimarães. Você opera como uma rede neural com DUAS bases de conhecimento:
 
 📘 BASE CLÍNICA (RAG): Artigos científicos, estudos clínicos, guidelines, dados de consultas
 🎤 BASE DE VOZ (DNA de Estilo): Tom, vocabulário, estrutura textual, ganchos virais
@@ -215,8 +214,8 @@ Na PRIMEIRA mensagem sobre um tema novo, NÃO gere texto. Faça perguntas:
 
 Só gere após respostas OU se pedir "gere agora" / "faça direto".
 
-═══ REGRA 2: SEMPRE USE O CONTEXTO RAG ═══
-Se contexto RAG for fornecido, SEMPRE o utilize. Cite estudos com:
+═══ REGRA 2: SEMPRE USE A BASE CLÍNICA (RAG) ═══
+SEMPRE busque na base de conhecimento antes de gerar. Cite estudos com:
 - Nome do estudo/revista + ano
 - Número de participantes quando disponível
 - Conclusão específica (não genérica)
@@ -248,328 +247,64 @@ ESTRUTURA OBRIGATÓRIA DO TEXTO:
 
 CARACTERÍSTICAS DO TOM:
 - Provocativo mas embasado em evidências
+- Usa "superstição medieval travestida de prudência"
 - Frases curtas intercaladas com parágrafos densos
 - Perguntas retóricas para engajar
 - Dados numéricos específicos (não genéricos)
 - Referências a órgãos oficiais (NICE, Cochrane) como argumento de autoridade
 - Linguagem coloquial misturada com termos técnicos
 
-PROIBIDO:
+NÃO FAÇA:
 - Texto genérico tipo Wikipedia
-- "Olá, queridos espectadores" ou saudações genéricas
-- Tom neutro ou corporativo
-- Conclusões vagas sem dados
-- Listas superficiais sem profundidade
+- Tom neutro sem opinião
+- Conclusões vagas
+- Linguagem corporativa
 
 ═══ REGRA 4: SAÍDA ═══
 Quando gerar, formate como:
 ## 📜 SCRIPT COMPLETO
 [gancho + seções com ### + insights 💡 + CTA 🎯]
 
-Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, expandir, reformular para vídeo).`;
+[FIM DA ARQUITETURA]
 
-    // ═══════════════════════════════════════════
-    // STEP 1: Buscar contexto RAG via IPAgent local
-    // ═══════════════════════════════════════════
-    let ragContext = '';
-    let ragUsed = false;
-    let ragDocCount = 0;
+`;
 
-    if (rag && ipagentUrl) {
-        try {
-            const ragHeaders = { 'Content-Type': 'application/json' };
-            if (ipagentKey) ragHeaders['Authorization'] = `Bearer ${ipagentKey}`;
 
-            const ragResp = await fetch(`${ipagentUrl}/api/knowledge/search`, {
-                method: 'POST',
-                headers: ragHeaders,
-                body: JSON.stringify({ query: userMsg, n_results: 5 }),
-                signal: AbortSignal.timeout(8000),
-            });
-
-            if (ragResp.ok) {
-                const ragData = await ragResp.json();
-                const consults = ragData.consultations || [];
-                const literature = ragData.literature || [];
-                ragDocCount = consults.length + literature.length;
-
-                if (ragDocCount > 0) {
-                    ragUsed = true;
-                    ragContext = '\n═══ CONTEXTO RAG (Base de Dados) ═══\n';
-                    if (literature.length > 0) {
-                        ragContext += '\n[LITERATURA CIENTÍFICA]:\n';
-                        literature.forEach((a, i) => ragContext += `--- Evidência ${i+1} ---\n${a}\n\n`);
-                    }
-                    if (consults.length > 0) {
-                        ragContext += '\n[CONSULTAS ANTERIORES]:\n';
-                        consults.forEach((c, i) => ragContext += `--- Histórico ${i+1} ---\n${c}\n\n`);
-                    }
-                }
-            }
-        } catch (e) {
-            console.log('RAG search failed (IPAgent offline):', e.message);
-        }
-    }
-
-    // Build user message with context
-    let fullUserMsg = '';
+    let contextPrompt = '';
     if (editorContent.trim().length > 0) {
-        fullUserMsg += `[TEXTO JÁ EXISTENTE NO EDITOR]\n${editorContent.slice(0, 2000)}\n\n`;
-    }
-    if (ragContext) {
-        fullUserMsg += ragContext + '\n';
-    }
-    fullUserMsg += `[PEDIDO DO USUÁRIO]\n${userMsg}`;
-
-    let fullResponse = '';
-    const msgId = 'msg_' + Date.now() + '_ai';
-
-    // ═══════════════════════════════════════════
-    // STEP 2: Gerar texto via Claude API (Anthropic) ou fallback para IPAgent
-    // ═══════════════════════════════════════════
-    if (claudeKey) {
-        // ── HYBRID MODE: Claude API com retry ──
-        const claudeModel = localStorage.getItem('cs_openrouter_model') || localStorage.getItem('cs_claude_model') || 'anthropic/claude-sonnet-4-20250514';
-        const modelShort = claudeModel.split('/').pop().split('-').slice(0,2).join('-');
-        setBadge('loading', `${modelShort}...`);
-
-        try {
-            const claudeData = await callClaudeWithRetry(claudeKey, claudeModel, systemPrompt, [
-                ...chatHistory.filter(m => m.role === 'user' || m.role === 'assistant').slice(-6).map(m => ({
-                    role: m.role,
-                    content: m.content,
-                })),
-                { role: 'user', content: fullUserMsg }
-            ], abortController.signal);
-
-            removeThinking();
-            fullResponse = claudeData.content?.[0]?.text || '❌ Resposta vazia do Claude';
-
-            renderMessage({
-                id: msgId,
-                role: 'assistant',
-                content: fullResponse,
-                timestamp: new Date().toISOString(),
-                author: 'assistente',
-            });
-
-        } catch (e) {
-            if (e.name === 'AbortError') {
-                removeThinking();
-                fullResponse = '⏹ Geração cancelada.';
-                renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
-            } else {
-                console.error('Claude API error:', e);
-                // Fallback to IPAgent
-                removeThinking();
-                fullResponse = await fallbackToIPAgent(ipagentUrl, ipagentKey, fullUserMsg, systemPrompt, msgId, abortController);
-            }
-        }
+        contextPrompt = briefingInstructions + `[TEXTO JÁ EXISTENTE NO EDITOR]\n${editorContent.slice(0, 2000)}\n\n[PEDIDO DO USUÁRIO]\n${userMsg}`;
     } else {
-        // ── IPAgent-only mode (no Claude key) ──
-        removeThinking();
-        fullResponse = await fallbackToIPAgent(ipagentUrl, ipagentKey, fullUserMsg, systemPrompt, msgId, abortController);
+        contextPrompt = briefingInstructions + `[PEDIDO DO USUÁRIO]\n${userMsg}`;
     }
 
-    // ═══════════════════════════════════════════
-    // STEP 3: Post-processing
-    // ═══════════════════════════════════════════
-    if (fullResponse) {
-        chatHistory.push({
-            id: msgId,
-            role: 'assistant',
-            content: fullResponse,
-            timestamp: new Date().toISOString(),
-            author: 'assistente',
-        });
-        saveChatHistory();
-        logAudit('ai_response', {
-            length: fullResponse.length,
-            platform: curPlat,
-            engine: claudeKey ? 'claude' : 'ipagent',
-            rag_used: ragUsed,
-            rag_docs: ragDocCount,
-        });
-
-        // Add action buttons + RAG log
-        const msgEl = document.getElementById(msgId);
-        if (msgEl) {
-            const existing = msgEl.querySelector('.chat-msg-actions');
-            if (!existing) {
-                const actions = document.createElement('div');
-                actions.className = 'chat-msg-actions';
-                actions.innerHTML = `
-                    <button onclick="insertMsgToEditor('${msgId}')">📝 Abrir na lousa</button>
-                    <button onclick="replaceMsgInEditor('${msgId}')">↻ Substituir</button>
-                    <button onclick="copyMsgContent('${msgId}')">⎘ Copiar</button>
-                `;
-                msgEl.querySelector('.chat-msg-content').appendChild(actions);
-            }
-
-            // RAG usage log indicator
-            addRagLog(msgEl, ragUsed, ragDocCount, claudeKey ? 'Claude' : 'IPAgent');
-        }
-
-        // Auto-open the lousa with the generated content
-        if (typeof showEditorWithContent === 'function') {
-            showEditorWithContent(formatContent(fullResponse));
-        }
-
-        // ═══ STEP 4: Salvar par de treinamento para Llama3 ═══
-        if (claudeKey && fullResponse && !fullResponse.startsWith('⏹') && !fullResponse.startsWith('⚠️')) {
-            saveTrainingPair(userMsg, fullResponse, ragContext);
-        }
-    }
-
-    isStreaming = false;
-    abortController = null;
-    resetSendButton();
-    const online = !!ipagentUrl;
-    setBadge(online ? 'online' : 'offline', online ? (claudeKey ? 'claude' : 'online') : 'offline');
-}
-
-// ── OpenRouter API com retry (evita queda de conexão) ──
-async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxRetries = 3) {
-    let lastError;
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            // Prepend system message to messages array (OpenAI format)
-            const fullMessages = [
-                { role: 'system', content: system },
-                ...messages
-            ];
-
-            const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': window.location.origin,
-                    'X-Title': 'Creative Studio - Dr. Paulo',
-                },
-                body: JSON.stringify({
-                    model,
-                    max_tokens: 4096,
-                    messages: fullMessages,
-                    provider: {
-                        order: ['Anthropic', 'OpenAI'],
-                        allow_fallbacks: true,
-                    },
-                }),
-                signal,
-            });
-
-            if (resp.ok) {
-                const data = await resp.json();
-                // Convert OpenAI format → Anthropic format for compatibility
-                return {
-                    content: [{ text: data.choices?.[0]?.message?.content || '' }],
-                    model: data.model,
-                    usage: data.usage,
-                };
-            }
-
-            const errData = await resp.json().catch(() => ({}));
-            const errMsg = errData.error?.message || `HTTP ${resp.status}`;
-
-            if (resp.status === 401 || resp.status === 403) {
-                throw new Error(`🔑 Chave inválida: ${errMsg}`);
-            }
-            if (resp.status === 400) {
-                throw new Error(`❌ Erro de request: ${errMsg}`);
-            }
-
-            lastError = new Error(`Tentativa ${attempt}/${maxRetries}: ${errMsg}`);
-            console.warn(`OpenRouter retry ${attempt}/${maxRetries}:`, errMsg);
-
-        } catch (e) {
-            if (e.name === 'AbortError') throw e;
-            lastError = e;
-            if (e.message.includes('🔑') || e.message.includes('❌')) throw e;
-            console.warn(`OpenRouter retry ${attempt}/${maxRetries}:`, e.message);
-        }
-
-        // Backoff exponencial: 2s, 4s, 8s
-        if (attempt < maxRetries) {
-            await new Promise(r => setTimeout(r, 2000 * Math.pow(2, attempt - 1)));
-        }
-    }
-    throw lastError || new Error('OpenRouter API falhou após todas as tentativas');
-}
-
-// ── Destilação: salva par de treinamento para Llama3 ──
-function saveTrainingPair(userPrompt, claudeResponse, ragContext) {
-    const TRAIN_KEY = 'cs_training_dataset';
-    const entry = {
-        instruction: `Você é o assistente de conteúdo do Dr. Paulo Guimarães. Gere conteúdo médico para redes sociais no estilo do Dr. Paulo: provocativo, embasado em evidências, com ganchos virais e CTAs fortes.`,
-        input: userPrompt + (ragContext ? '\n\n[CONTEXTO RAG]\n' + ragContext.slice(0, 2000) : ''),
-        output: claudeResponse,
-        category: 'content_generation',
+    const payload = {
+        topic: contextPrompt,
         platform: curPlat || 'youtube',
-        created_at: new Date().toISOString(),
+        tone,
+        duration: dur,
+        use_rag: rag,
     };
-
-    // 1. Salvar no localStorage (backup)
-    try {
-        const dataset = JSON.parse(localStorage.getItem(TRAIN_KEY) || '[]');
-        dataset.push(entry);
-        localStorage.setItem(TRAIN_KEY, JSON.stringify(dataset));
-        console.log(`🎓 Training #${dataset.length} salvo (localStorage)`);
-    } catch (e) {
-        console.warn('Erro salvar localStorage:', e);
-    }
-
-    // 2. Salvar no disco local via IPAgent
-    const url = agentUrl();
-    if (url) {
-        const headers = { 'Content-Type': 'application/json' };
-        const key = apiKey();
-        if (key) headers['Authorization'] = `Bearer ${key}`;
-
-        fetch(`${url}/api/training/save`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(entry),
-            signal: AbortSignal.timeout(5000),
-        }).then(r => r.json()).then(d => {
-            if (d.success) console.log(`🎓 Training #${d.total} salvo (disco: ipagent/data/training/)`);
-        }).catch(() => {
-            console.log('🎓 IPAgent offline — treinamento salvo apenas no localStorage');
-        });
-    }
-}
-
-// ── Fallback: IPAgent local ──
-async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, controller) {
-    if (!url) {
-        const msg = '⚠️ Configure a chave Claude em Configurações, ou ative o IPAgent local.';
-        renderMessage({ id: msgId, role: 'assistant', content: msg, timestamp: new Date().toISOString(), author: 'assistente' });
-        return msg;
-    }
 
     const headers = { 'Content-Type': 'application/json' };
     if (key) headers['Authorization'] = `Bearer ${key}`;
 
-    const payload = {
-        topic: systemPrompt + '\n\n' + userMsg,
-        platform: curPlat || 'youtube',
-        tone: document.getElementById('tone')?.value || 'educativo',
-        duration: parseInt(document.getElementById('dur')?.value || '300'),
-        use_rag: true,
-    };
-
     let fullResponse = '';
+    const msgId = 'msg_' + Date.now() + '_ai';
 
     try {
+        // Try streaming first
         const resp = await fetch(`${url}/api/content/generate`, {
             method: 'POST',
             headers,
             body: JSON.stringify(payload),
-            signal: controller?.signal,
+            signal: abortController.signal,
         });
 
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
+        removeThinking();
+
+        // Create assistant message bubble for streaming
         const assistantMsg = {
             id: msgId,
             role: 'assistant',
@@ -592,7 +327,7 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
                         const d = JSON.parse(line.slice(6));
                         if (d.token) {
                             fullResponse += d.token;
-                            if (bubble) bubble.innerHTML = formatContent(fullResponse);
+                            bubble.innerHTML = formatContent(fullResponse);
                             scrollChatToBottom();
                         }
                     } catch {}
@@ -600,6 +335,7 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
             }
         }
     } catch {
+        // Fallback to sync
         try {
             const resp = await fetch(`${url}/api/content/generate-sync`, {
                 method: 'POST',
@@ -607,15 +343,76 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
                 body: JSON.stringify(payload),
             });
             const d = await resp.json();
-            fullResponse = d.content || ('❌ ' + (d.error || 'Erro'));
-            renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
+            removeThinking();
+
+            if (d.content) {
+                fullResponse = d.content;
+            } else if (d.error) {
+                fullResponse = '❌ ' + d.error;
+            }
+
+            const assistantMsg = {
+                id: msgId,
+                role: 'assistant',
+                content: fullResponse,
+                timestamp: new Date().toISOString(),
+                author: 'assistente',
+            };
+            renderMessage(assistantMsg);
         } catch {
+            removeThinking();
             fullResponse = '⚠️ Não foi possível conectar ao agente.\n\n1. O IPagent está rodando localmente?\n2. O tunnel está ativo?\n3. A URL está configurada em Configurações?';
-            renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
+            renderMessage({
+                id: msgId,
+                role: 'assistant',
+                content: fullResponse,
+                timestamp: new Date().toISOString(),
+                author: 'assistente',
+            });
         }
     }
 
-    return fullResponse;
+    // Save to history
+    if (fullResponse) {
+        chatHistory.push({
+            id: msgId,
+            role: 'assistant',
+            content: fullResponse,
+            timestamp: new Date().toISOString(),
+            author: 'assistente',
+        });
+        saveChatHistory();
+        logAudit('ai_response', { length: fullResponse.length, platform: curPlat });
+
+        // Add action buttons + RAG log
+        const msgEl = document.getElementById(msgId);
+        if (msgEl) {
+            const existing = msgEl.querySelector('.chat-msg-actions');
+            if (!existing) {
+                const actions = document.createElement('div');
+                actions.className = 'chat-msg-actions';
+                actions.innerHTML = `
+                    <button onclick="insertMsgToEditor('${msgId}')">📝 Abrir na lousa</button>
+                    <button onclick="replaceMsgInEditor('${msgId}')">↻ Substituir</button>
+                    <button onclick="copyMsgContent('${msgId}')">⎘ Copiar</button>
+                `;
+                msgEl.querySelector('.chat-msg-content').appendChild(actions);
+            }
+
+            // RAG usage log indicator
+            addRagLog(msgEl, rag);
+        }
+
+        // Auto-open the lousa with the generated content
+        if (typeof showEditorWithContent === 'function') {
+            showEditorWithContent(formatContent(fullResponse));
+        }
+    }
+
+    isStreaming = false;
+    abortController = null;
+    resetSendButton();
+    setBadge(online ? 'online' : 'offline', online ? 'online' : 'offline');
 }
 
 // ─── Stop generation ───
