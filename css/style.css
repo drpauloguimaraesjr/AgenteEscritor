@@ -980,34 +980,34 @@ select {
     inset: 0;
     z-index: 0;
     overflow: hidden;
-    background: var(--bg-base);
+    background: #0c0c0c;
 }
 
 .smoke-blob {
     position: absolute;
     border-radius: 50%;
-    filter: blur(90px);
+    filter: blur(80px);
 }
 
 .smoke-1 {
-    width: 700px; height: 700px;
-    background: radial-gradient(circle, rgba(200,195,185,0.7) 0%, transparent 65%);
-    top: -200px; left: -200px;
-    animation: smokeMove1 20s ease-in-out infinite;
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(220,220,220,0.08) 40%, transparent 70%);
+    top: -250px; left: -200px;
+    animation: smokeMove1 22s ease-in-out infinite;
 }
 
 .smoke-2 {
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(185,180,170,0.5) 0%, transparent 65%);
-    bottom: -150px; right: -150px;
-    animation: smokeMove2 25s ease-in-out infinite;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(200,200,200,0.06) 40%, transparent 70%);
+    bottom: -200px; right: -150px;
+    animation: smokeMove2 28s ease-in-out infinite;
 }
 
 .smoke-3 {
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(210,205,200,0.4) 0%, transparent 65%);
-    top: 30%; left: 25%;
-    animation: smokeMove3 17s ease-in-out infinite;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(240,240,240,0.1) 35%, transparent 65%);
+    top: 20%; left: 20%;
+    animation: smokeMove3 18s ease-in-out infinite;
 }
 
 @keyframes smokeMove1 {
@@ -1081,7 +1081,7 @@ select {
 .login-credit {
     text-align: center;
     font-size: 10px;
-    color: var(--text-4);
+    color: rgba(255,255,255,0.3);
     margin-top: 16px;
     font-family: 'JetBrains Mono', monospace;
     letter-spacing: 0.03em;
@@ -1091,14 +1091,14 @@ select {
     font-family: 'Playfair Display', serif;
     font-size: 24px;
     font-weight: 700;
-    color: var(--text-1);
+    color: #ffffff;
     margin-bottom: 4px;
     letter-spacing: -0.02em;
 }
 
 .login-header p {
     font-size: 13px;
-    color: var(--text-3);
+    color: rgba(255,255,255,0.55);
 }
 
 .login-box {
