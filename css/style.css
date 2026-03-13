@@ -113,15 +113,13 @@ body {
 .sidebar-logo {
     width: 32px;
     height: 32px;
-    background: #1a1a1a;
-    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 
-.sidebar-logo svg { width: 18px; height: 18px; }
+.sidebar-logo svg { width: 28px; height: 28px; }
 
 .sidebar-toggles { display: flex; gap: 4px; margin-left: auto; }
 .pin-btn, .close-sidebar-btn { background: none; border: none; color: var(--text-3); width: 22px; height: 22px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
@@ -976,14 +974,67 @@ select {
 /* ============================================
    LOGIN PAGE
    ============================================ */
+/* Smoke / fog login background */
+.login-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: var(--bg-base);
+}
+
+.smoke-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+}
+
+.smoke-1 {
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(200,195,185,0.7) 0%, transparent 65%);
+    top: -200px; left: -200px;
+    animation: smokeMove1 20s ease-in-out infinite;
+}
+
+.smoke-2 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(185,180,170,0.5) 0%, transparent 65%);
+    bottom: -150px; right: -150px;
+    animation: smokeMove2 25s ease-in-out infinite;
+}
+
+.smoke-3 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(210,205,200,0.4) 0%, transparent 65%);
+    top: 30%; left: 25%;
+    animation: smokeMove3 17s ease-in-out infinite;
+}
+
+@keyframes smokeMove1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(100px, 80px) scale(1.08); }
+    66% { transform: translate(-50px, 130px) scale(0.92); }
+}
+
+@keyframes smokeMove2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    40% { transform: translate(-120px, -80px) scale(1.12); }
+    75% { transform: translate(80px, -100px) scale(0.88); }
+}
+
+@keyframes smokeMove3 {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+    50% { transform: translate(-80px, 60px) scale(1.15); opacity: 0.8; }
+}
+
 .login-shell {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-base);
     position: relative;
     padding: 20px;
+    z-index: 1;
 }
 
 .login-shell::before {
@@ -1016,6 +1067,24 @@ select {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.login-logo {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-credit {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-4);
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
 }
 
 .login-header h1 {
