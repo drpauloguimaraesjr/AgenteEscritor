@@ -8,15 +8,20 @@
     <script src="https://unpkg.com/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"></script>
 </head>
 <body>
-    <div class="app-shell">
+    <div class="app-shell sidebar-pinned" id="appShell">
+        <div class="sidebar-hover-zone" id="hoverZone" onmouseenter="openSidebarHover()"></div>
         <!-- SIDEBAR -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar" id="sidebar" onmouseleave="closeSidebarHover()">
             <div class="sidebar-top">
                 <div class="sidebar-brand">
                     <div class="sidebar-logo">
                         <svg fill="none" viewBox="0 0 99 99" role="img" aria-label="NutriBuddy logo"><title>NutriBuddy</title><path d="M98.9485 98.2746C98.9485 98.6491 98.6491 98.9486 98.2746 98.9486H0.673964C0.299499 98.9486 0 98.6491 0 98.2746V0.67401C0 0.299545 0.299499 0 0.673964 0H98.2746C98.6491 0 98.9485 0.299545 98.9485 0.67401V98.2746ZM20.4456 86.5464L30.8559 93.4365C31.3951 93.796 32.0242 93.9907 32.6682 93.9907H93.4215C93.8709 93.9907 94.2303 93.6312 94.2303 93.1819V5.58699C94.2303 5.00282 93.766 4.53851 93.1968 4.53851L44.8309 4.68831C44.3366 4.68831 43.9771 5.15265 44.0969 5.63197C44.1119 5.69188 44.3217 5.82667 44.7261 6.03637C45.0257 6.20114 45.3102 6.62055 45.5648 7.30957C48.4706 15.0086 45.1005 18.2739 38.3152 22.1234C33.2375 25.0142 28.9985 27.3959 25.6134 29.2682C24.8944 29.6726 24.8644 30.6911 25.5684 31.1105C31.3352 34.6006 36.2631 37.8659 40.3373 40.9365C44.2467 43.8873 45.3851 47.9165 43.7225 53.0242C43.363 54.1327 41.6554 56.0949 40.9514 57.4429C40.6968 57.9372 40.8166 58.5514 41.2659 58.8959C44.007 61.0528 45.0855 64.0036 44.4864 67.7632C44.082 70.2646 42.2695 72.4964 39.0491 74.4436C34.0463 77.4693 28.3394 80.6298 20.4756 85.423C20.0562 85.6776 20.0412 86.2767 20.4456 86.5464ZM23.6961 4.68831H5.76673C5.30239 4.68831 4.91284 5.07772 4.91284 5.54206V93.2418C4.91284 93.6612 5.24237 93.9907 5.66177 93.9907H10.6048C11.0541 93.9907 11.3986 93.5713 11.3087 93.1369C10.9792 91.4743 11.2787 89.3773 12.1924 86.8459C12.3572 86.4115 12.4321 85.9472 12.4471 85.4978C12.4621 85.0185 12.0726 83.0413 11.2787 79.5513C10.0505 74.1291 12.3573 70.4743 16.8359 66.9693C21.1648 63.5692 25.5683 60.6633 30.017 58.2518C30.6161 57.9222 30.6611 57.0834 30.092 56.709L17.6596 48.4707C17.4949 48.3659 17.3602 48.2311 17.2404 48.0963C12.2226 41.9101 11.8481 36.1883 16.102 30.9009C16.5514 30.3317 16.5962 29.5528 16.2068 28.9387C11.878 22.2432 11.833 15.398 17.9143 10.2753C19.7118 8.76246 21.734 7.1897 23.9808 5.58699C24.3702 5.3024 24.1754 4.68831 23.6961 4.68831Z" fill="hsl(45, 5%, 10%)"/></svg>
                     </div>
                     <span class="sidebar-brand-text">Creative Studio</span>
+                    <div class="sidebar-toggles">
+                        <button class="pin-btn" id="pinBtn" onclick="togglePin()" title="Manter sidebar aberta">📌</button>
+                        <button class="close-sidebar-btn" onclick="document.getElementById('sidebar').classList.remove('open')" title="Fechar">✕</button>
+                    </div>
                 </div>
                 <button class="sidebar-new-btn" onclick="createNewProject()">
                     <span>+</span> Nova conversa
@@ -73,13 +78,51 @@
             });
         }
 
-        // Hide admin-only items for non-admin users
+        // Sidebar interaction logic
         document.addEventListener('DOMContentLoaded', () => {
+            const isPinned = localStorage.getItem('cs_sidebar_pinned');
+            const shell = document.getElementById('appShell');
+            if (isPinned === 'false') {
+                shell.classList.remove('sidebar-pinned');
+                updatePinBtn(false);
+            } else {
+                shell.classList.add('sidebar-pinned');
+                updatePinBtn(true);
+            }
+
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             if (user.role !== 'admin') {
                 document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
             }
         });
+
+        function openSidebarHover() {
+            if (!document.getElementById('appShell').classList.contains('sidebar-pinned')) {
+                document.getElementById('sidebar').classList.add('hover-open');
+            }
+        }
+        function closeSidebarHover() {
+            if (!document.getElementById('appShell').classList.contains('sidebar-pinned')) {
+                document.getElementById('sidebar').classList.remove('hover-open');
+            }
+        }
+        function togglePin() {
+            const shell = document.getElementById('appShell');
+            const pinned = shell.classList.toggle('sidebar-pinned');
+            localStorage.setItem('cs_sidebar_pinned', pinned);
+            updatePinBtn(pinned);
+            closeSidebarHover();
+        }
+        function updatePinBtn(pinned) {
+            const pinBtn = document.getElementById('pinBtn');
+            if(pinned) {
+                pinBtn.style.color = 'var(--text-1)';
+                pinBtn.style.background = 'var(--bg-hover)';
+            } else {
+                pinBtn.style.color = 'var(--text-3)';
+                pinBtn.style.background = 'none';
+            }
+        }
         </script>       
         <!-- MAIN CONTENT: Chat (center) + Editor/Lousa (right, hidden) -->
         <div class="main-area">
