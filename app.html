@@ -165,6 +165,9 @@
 
         <!-- Header -->
         <div class="ai-panel-header">
+            <div class="ai-panel-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <span class="ai-panel-title">Agente IA</span>
             <div class="ai-panel-status">
                 <span class="status-badge status-online" id="ragBadge" style="display:none;">RAG · <span id="kbCount">0</span></span>
@@ -173,13 +176,19 @@
                 </span>
             </div>
         </div>
+        <!-- KB badge -->
+        <div class="ai-kb-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="#7C6FF0" stroke-width="2"/></svg>
+            <span style="color:var(--text-2);font-size:12px;">Base de conhecimento:</span>
+            <strong id="kbCountDisplay">3.847 docs</strong>
+        </div>
 
         <!-- Generation form -->
         <div class="ai-panel-body" id="aiSettingsPanel">
 
             <div class="form-group">
                 <label class="ai-field-label">Tema do Conteúdo</label>
-                <textarea class="chat-input ai-theme-input" id="chatInput"
+                <textarea class="ai-theme-input" id="chatInput"
                     placeholder="Ex: implantes hormonais subcutâneos benefícios e riscos"
                     rows="3" onkeydown="handleChatKey(event)" oninput="autoResizeInput(this)"></textarea>
             </div>
@@ -213,15 +222,16 @@
                 <input type="checkbox" class="toggle" id="useRag" checked>
             </div>
 
-            <button class="btn btn-brand btn-full" id="chatSendBtn" onclick="sendChat()">
-                ⚡ Gerar conteúdo
+            <button class="btn btn-brand btn-full" id="chatSendBtn" onclick="sendChat()" style="height:42px;border-radius:9px;font-size:13px;gap:8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Gerar conteúdo
             </button>
 
         </div>
 
         <!-- Output -->
         <div class="ai-output-section">
-            <div class="ai-output-label">● Saída do Agente</div>
+            <div class="ai-output-label">SAÍDA DO AGENTE</div>
             <div class="chat-messages" id="chatMessages">
                 <div class="chat-welcome">
                     <p>Seu assistente de criação de conteúdo médico. Defina um tema e gere.</p>
