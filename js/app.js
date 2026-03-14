@@ -89,6 +89,18 @@ function openDoc(id) {
     updateMeta();
     updateSave('Carregado ✓');
     renderFiles();
+    // Show editor pane (lousa)
+    const pane = document.getElementById('editorPane');
+    if (pane) pane.classList.remove('hidden');
+    // Load chat history for this project
+    if (typeof loadChatHistory === 'function') loadChatHistory();
+    if (typeof renderChatHistory === 'function') {
+        const container = document.getElementById('chatMessages');
+        if (container) {
+            container.innerHTML = '';
+            renderChatHistory();
+        }
+    }
 }
 
 function saveCurrent() {

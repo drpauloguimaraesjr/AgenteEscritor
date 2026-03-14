@@ -262,6 +262,65 @@ def api_stats():
         "by_type": {r[0]: r[1] for r in by_type}
     })
 
+
+
+# ─── COMPATIBILITY ROUTES (match chat.js frontend) ───────
+@app.route("/api/knowledge/search", methods=["POST"])
+def api_knowledge_search():
+    """Endpoint called by chat.js for RAG context"""
+    data = request.get_json(force=True)
+    query = data.get("query", "")
+    n = data.get("n_results", 5)
+    results = search_knowledge(query, n)
+    
+    # Format into consultations + literature as chat.js expects
+    consultations = []
+    literature = []
+    for r in results:
+        text = f"{r['title']}\n{r['snippet']}"
+        if r.get('doc_type') in ('artigo_cientifico', 'roteiro'):
+            literature.append(text)
+        else:
+            consultations.append(text)
+    
+    return jsonify({
+        "consultations": consultations,
+        "literature": literature,
+        "total": len(results)
+    })
+
+@app.route("/api/content/generate-sync", methods=["POST"])
+def api_generate_sync():
+    """Sync generation endpoint - returns RAG context as formatted text"""
+    data = request.get_json(force=True)
+    topic = data.get("topic", "")
+    platform = data.get("platform", "youtube")
+    tone = data.get("tone", "educativo")
+    
+    # Extract user query from topic
+    query = topic.split("[PEDIDO DO USUÁRIO]")[-1].strip() if "[PEDIDO DO USUÁRIO]" in topic else topic[-500:]
+    
+    results = search_knowledge(query, 8)
+    style = get_style_dna()
+    
+    if not results:
+        return jsonify({"content": "Não encontrei informações relevantes na base de conhecimento para este tema. Tente reformular a busca ou configure o OpenRouter para geração com IA."})
+    
+    # Build a formatted response from RAG results
+    response = "## 📚 Contexto encontrado na base de conhecimento\n\n"
+    response += f"Encontrei **{len(results)} documentos** relevantes:\n\n"
+    
+    for i, r in enumerate(results, 1):
+        response += f"### [{i}] {r['title']}\n"
+        response += f"{r['snippet']}\n"
+        response += f"*Fonte: {r.get('source', 'N/A')} | Tipo: {r.get('doc_type', 'N/A')}*\n\n"
+    
+    response += "---\n\n"
+    response += "💡 **Para gerar o script completo**, configure a chave do OpenRouter em ⚙️ Configurações.\n"
+    response += "O sistema usará este contexto RAG + o DNA de estilo do Dr. Paulo para criar o conteúdo."
+    
+    return jsonify({"content": response})
+
 # ─── STARTUP ────────────────────────────────────────────
 if __name__ == "__main__":
     print("=" * 50)
