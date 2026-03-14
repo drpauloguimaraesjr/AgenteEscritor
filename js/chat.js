@@ -410,10 +410,7 @@ Se o usuÃ¡rio colar um texto pronto, pergunte o que quer (adaptar tom, resumir
             addRagLog(msgEl, ragUsed, ragDocCount, claudeKey ? 'Claude' : 'IPAgent');
         }
 
-        // Auto-open the lousa with the generated content
-        if (typeof showEditorWithContent === 'function') {
-            showEditorWithContent(formatContent(fullResponse));
-        }
+        // Botao de lousa disponivel, mas sem abrir automaticamente.
 
         // â•â•â• STEP 4: Salvar par de treinamento para Llama3 â•â•â•
         if (claudeKey && fullResponse && !fullResponse.startsWith('â¹') && !fullResponse.startsWith('âš ï¸')) {
@@ -645,6 +642,7 @@ function addRagLog(msgEl, ragUsed) {
 
 // â”€â”€â”€ Message actions â”€â”€â”€
 function insertMsgToEditor(msgId) {
+    // Botao: Adicionar a lousa
     const msg = chatHistory.find(m => m.id === msgId);
     if (!msg) return;
     // Open lousa with content appended
@@ -658,6 +656,7 @@ function insertMsgToEditor(msgId) {
 }
 
 function replaceMsgInEditor(msgId) {
+    // Botao: Substituir lousa
     const msg = chatHistory.find(m => m.id === msgId);
     if (!msg) return;
     if (typeof showEditorWithContent === 'function') {
@@ -888,5 +887,9 @@ if (document.readyState !== 'loading') {
     initChat();
     renderFilesGrouped();
 }
+
+
+
+
 
 
