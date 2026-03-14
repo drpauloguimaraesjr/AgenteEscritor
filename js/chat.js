@@ -1,16 +1,16 @@
-/**
- * Creative Studio — Chat Engine
+﻿/**
+ * Creative Studio â€” Chat Engine
  * Conversational AI panel with streaming, actions, and audit trail
  * Eva Effects Design System aesthetic
  */
 
-// ─── Chat State ───
+// â”€â”€â”€ Chat State â”€â”€â”€
 let chatHistory = [];
 let isStreaming = false;
 let abortController = null;
 const CHAT_KEY = 'cs_chat_history';
 
-// ─── Init ───
+// â”€â”€â”€ Init â”€â”€â”€
 function initChat() {
     loadChatHistory();
     if (chatHistory.length > 0) {
@@ -18,7 +18,7 @@ function initChat() {
     }
 }
 
-// ─── Persistence ───
+// â”€â”€â”€ Persistence â”€â”€â”€
 function loadChatHistory() {
     try { chatHistory = JSON.parse(localStorage.getItem(CHAT_KEY + '_' + (curId || 'global')) || '[]'); } catch { chatHistory = []; }
 }
@@ -27,7 +27,7 @@ function saveChatHistory() {
     localStorage.setItem(CHAT_KEY + '_' + (curId || 'global'), JSON.stringify(chatHistory));
 }
 
-// ─── Toggle Settings Panel ───
+// â”€â”€â”€ Toggle Settings Panel â”€â”€â”€
 function toggleAiSettings() {
     const panel = document.getElementById('aiSettingsPanel');
     const btn = document.getElementById('aiSettingsToggle');
@@ -35,7 +35,7 @@ function toggleAiSettings() {
     btn.classList.toggle('active');
 }
 
-// ─── Send chat message ───
+// â”€â”€â”€ Send chat message â”€â”€â”€
 function sendChat() {
     const input = document.getElementById('chatInput');
     const msg = input.value.trim();
@@ -71,7 +71,7 @@ function autoResizeInput(el) {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
-// ─── Add message to chat ───
+// â”€â”€â”€ Add message to chat â”€â”€â”€
 function addMessage(role, content, id) {
     const msgId = id || 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
     const msg = {
@@ -92,7 +92,7 @@ function addMessage(role, content, id) {
     return msgId;
 }
 
-// ─── Render a single message ───
+// â”€â”€â”€ Render a single message â”€â”€â”€
 function renderMessage(msg) {
     const container = document.getElementById('chatMessages');
     const div = document.createElement('div');
@@ -101,13 +101,13 @@ function renderMessage(msg) {
 
     const initial = msg.role === 'user'
         ? (S?.name || S?.username || 'U').charAt(0).toUpperCase()
-        : '✦';
+        : 'âœ¦';
 
     const actionsHtml = msg.role === 'assistant' ? `
         <div class="chat-msg-actions">
-            <button onclick="insertMsgToEditor('${msg.id}')">📝 Abrir na lousa</button>
-            <button onclick="replaceMsgInEditor('${msg.id}')">↻ Substituir</button>
-            <button onclick="copyMsgContent('${msg.id}')">⎘ Copiar</button>
+            <button onclick="insertMsgToEditor('${msg.id}')">ðŸ“ Abrir na lousa</button>
+            <button onclick="replaceMsgInEditor('${msg.id}')">â†» Substituir</button>
+            <button onclick="copyMsgContent('${msg.id}')">âŽ˜ Copiar</button>
         </div>
     ` : '';
 
@@ -122,7 +122,7 @@ function renderMessage(msg) {
     container.appendChild(div);
 }
 
-// ─── Format content (simple markdown) ───
+// â”€â”€â”€ Format content (simple markdown) â”€â”€â”€
 function formatContent(text) {
     if (!text) return '';
     return text
@@ -133,11 +133,11 @@ function formatContent(text) {
         .replace(/^### (.*$)/gm, '<strong style="font-size:14px;">$1</strong>')
         .replace(/^## (.*$)/gm, '<strong style="font-size:15px;">$1</strong>')
         .replace(/^# (.*$)/gm, '<strong style="font-size:16px;">$1</strong>')
-        .replace(/^- (.*$)/gm, '• $1')
+        .replace(/^- (.*$)/gm, 'â€¢ $1')
         .replace(/\n/g, '<br>');
 }
 
-// ─── Render full chat history ───
+// â”€â”€â”€ Render full chat history â”€â”€â”€
 function renderChatHistory() {
     const container = document.getElementById('chatMessages');
     // Remove welcome if there are messages
@@ -149,14 +149,14 @@ function renderChatHistory() {
     scrollChatToBottom();
 }
 
-// ─── Show thinking indicator ───
+// â”€â”€â”€ Show thinking indicator â”€â”€â”€
 function showThinking() {
     const container = document.getElementById('chatMessages');
     const div = document.createElement('div');
     div.className = 'chat-msg assistant';
     div.id = 'thinking-indicator';
     div.innerHTML = `
-        <div class="chat-msg-avatar">✦</div>
+        <div class="chat-msg-avatar">âœ¦</div>
         <div class="chat-msg-content">
             <div class="chat-thinking">
                 <div class="thinking-dots"><span></span><span></span><span></span></div>
@@ -173,7 +173,7 @@ function removeThinking() {
     if (el) el.remove();
 }
 
-// ─── Generate AI response (HYBRID: RAG local + Claude API) ───
+// â”€â”€â”€ Generate AI response (HYBRID: RAG local + Claude API) â”€â”€â”€
 async function generateChatResponse(userMsg) {
     if (isStreaming) return;
     isStreaming = true;
@@ -182,7 +182,7 @@ async function generateChatResponse(userMsg) {
     const sendBtn = document.getElementById('chatSendBtn');
     sendBtn.disabled = false;
     sendBtn.classList.add('stop-mode');
-    sendBtn.title = 'Parar geração';
+    sendBtn.title = 'Parar geraÃ§Ã£o';
     sendBtn.onclick = stopGeneration;
     sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
     showThinking();
@@ -196,81 +196,81 @@ async function generateChatResponse(userMsg) {
     const rag = document.getElementById('useRag')?.checked ?? true;
     const editorContent = document.getElementById('editor')?.innerText || '';
 
-    // ═══════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // SYSTEM PROMPT: DNA DE ESTILO DR. PAULO
-    // ═══════════════════════════════════════════
-    const systemPrompt = `Você é o Assistente IA do Creative Studio do Dr. Paulo Guimarães. Você opera com DUAS bases de conhecimento:
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    const systemPrompt = `VocÃª Ã© o Assistente IA do Creative Studio do Dr. Paulo GuimarÃ£es. VocÃª opera com DUAS bases de conhecimento:
 
-📘 BASE CLÍNICA (RAG): Artigos científicos, estudos clínicos, guidelines, dados de consultas
-🎤 BASE DE VOZ (DNA de Estilo): Tom, vocabulário, estrutura textual, ganchos virais
+ðŸ“˜ BASE CLÃNICA (RAG): Artigos cientÃ­ficos, estudos clÃ­nicos, guidelines, dados de consultas
+ðŸŽ¤ BASE DE VOZ (DNA de Estilo): Tom, vocabulÃ¡rio, estrutura textual, ganchos virais
 
-═══ REGRA 1: BRIEFING ANTES DE GERAR ═══
-Na PRIMEIRA mensagem sobre um tema novo, NÃO gere texto. Faça perguntas:
-1. Estrutura: roteiro narrado, lista, storytelling, caso clínico, mito vs verdade?
+â•â•â• REGRA 1: BRIEFING ANTES DE GERAR â•â•â•
+Na PRIMEIRA mensagem sobre um tema novo, NÃƒO gere texto. FaÃ§a perguntas:
+1. Estrutura: roteiro narrado, lista, storytelling, caso clÃ­nico, mito vs verdade?
 2. Gancho viral: provocativo, educativo, emocional ou curiosidade?
-3. Duração do vídeo: 30s, 1min, 3min, 5min, 10min+?
-4. Público: pacientes leigos, profissionais de saúde, ou ambos?
-5. Tom: formal, acessível, provocativo, motivacional?
+3. DuraÃ§Ã£o do vÃ­deo: 30s, 1min, 3min, 5min, 10min+?
+4. PÃºblico: pacientes leigos, profissionais de saÃºde, ou ambos?
+5. Tom: formal, acessÃ­vel, provocativo, motivacional?
 6. CTA: agendar consulta, seguir perfil, compartilhar?
 
-Só gere após respostas OU se pedir "gere agora" / "faça direto".
+SÃ³ gere apÃ³s respostas OU se pedir "gere agora" / "faÃ§a direto".
 
-═══ REGRA 2: SEMPRE USE O CONTEXTO RAG ═══
+â•â•â• REGRA 2: SEMPRE USE O CONTEXTO RAG â•â•â•
 Se contexto RAG for fornecido, SEMPRE o utilize. Cite estudos com:
 - Nome do estudo/revista + ano
-- Número de participantes quando disponível
-- Conclusão específica (não genérica)
+- NÃºmero de participantes quando disponÃ­vel
+- ConclusÃ£o especÃ­fica (nÃ£o genÃ©rica)
 
-═══ REGRA 3: DNA DE ESTILO — COMO O DR. PAULO ESCREVE ═══
+â•â•â• REGRA 3: DNA DE ESTILO â€” COMO O DR. PAULO ESCREVE â•â•â•
 
-ESTRUTURA OBRIGATÓRIA DO TEXTO:
+ESTRUTURA OBRIGATÃ“RIA DO TEXTO:
 1. GANCHO VIRAL: Abertura provocativa que desafia o senso comum
-   Ex: "Câncer de mama assusta. Mas deveria assustar mais a quantidade de médicos mal informados..."
-   Ex: "50% dos usuários de EAA têm ECG alterado. Assustador? Olha o contexto."
+   Ex: "CÃ¢ncer de mama assusta. Mas deveria assustar mais a quantidade de mÃ©dicos mal informados..."
+   Ex: "50% dos usuÃ¡rios de EAA tÃªm ECG alterado. Assustador? Olha o contexto."
 
-2. CONFRONTO: Desmistifica crenças com tom assertivo
-   Ex: "Isso não é ciência. Isso é medo, ignorância e preguiça intelectual."
+2. CONFRONTO: Desmistifica crenÃ§as com tom assertivo
+   Ex: "Isso nÃ£o Ã© ciÃªncia. Isso Ã© medo, ignorÃ¢ncia e preguiÃ§a intelectual."
 
-3. EVIDÊNCIAS como ARMAS: Cada estudo é uma seção com ### header
+3. EVIDÃŠNCIAS como ARMAS: Cada estudo Ã© uma seÃ§Ã£o com ### header
    Ex: "### Estudo BRCA (Gynecologic Oncology 2019)"
-   Detalhar: participantes, metodologia, conclusão
+   Detalhar: participantes, metodologia, conclusÃ£o
 
-4. INSIGHT-CHAVE: Bloco destacado com 💡
-   Ex: "💡 Não é hormônio. É QUAL hormônio, COMO, em QUEM, em que DOSE e em que CONTEXTO."
+4. INSIGHT-CHAVE: Bloco destacado com ðŸ’¡
+   Ex: "ðŸ’¡ NÃ£o Ã© hormÃ´nio. Ã‰ QUAL hormÃ´nio, COMO, em QUEM, em que DOSE e em que CONTEXTO."
 
-5. CONTRAPONTO: Mostra falhas nos estudos/posições antigas
+5. CONTRAPONTO: Mostra falhas nos estudos/posiÃ§Ãµes antigas
 
-6. FECHAMENTO: Dados numéricos específicos (+6% risco, +9% risco)
+6. FECHAMENTO: Dados numÃ©ricos especÃ­ficos (+6% risco, +9% risco)
 
-7. CTA FORTE com 🎯
-   Ex: "🎯 Encaminhe este vídeo para aquela pessoa que vive falando mal de hormônio."
-   Ex: "Me segue pra conteúdo com referência aplicada — não manchete mastigada."
+7. CTA FORTE com ðŸŽ¯
+   Ex: "ðŸŽ¯ Encaminhe este vÃ­deo para aquela pessoa que vive falando mal de hormÃ´nio."
+   Ex: "Me segue pra conteÃºdo com referÃªncia aplicada â€” nÃ£o manchete mastigada."
 
-CARACTERÍSTICAS DO TOM:
-- Provocativo mas embasado em evidências
-- Frases curtas intercaladas com parágrafos densos
-- Perguntas retóricas para engajar
-- Dados numéricos específicos (não genéricos)
-- Referências a órgãos oficiais (NICE, Cochrane) como argumento de autoridade
-- Linguagem coloquial misturada com termos técnicos
+CARACTERÃSTICAS DO TOM:
+- Provocativo mas embasado em evidÃªncias
+- Frases curtas intercaladas com parÃ¡grafos densos
+- Perguntas retÃ³ricas para engajar
+- Dados numÃ©ricos especÃ­ficos (nÃ£o genÃ©ricos)
+- ReferÃªncias a Ã³rgÃ£os oficiais (NICE, Cochrane) como argumento de autoridade
+- Linguagem coloquial misturada com termos tÃ©cnicos
 
 PROIBIDO:
-- Texto genérico tipo Wikipedia
-- "Olá, queridos espectadores" ou saudações genéricas
+- Texto genÃ©rico tipo Wikipedia
+- "OlÃ¡, queridos espectadores" ou saudaÃ§Ãµes genÃ©ricas
 - Tom neutro ou corporativo
-- Conclusões vagas sem dados
+- ConclusÃµes vagas sem dados
 - Listas superficiais sem profundidade
 
-═══ REGRA 4: SAÍDA ═══
+â•â•â• REGRA 4: SAÃDA â•â•â•
 Quando gerar, formate como:
-## 📜 SCRIPT COMPLETO
-[gancho + seções com ### + insights 💡 + CTA 🎯]
+## ðŸ“œ SCRIPT COMPLETO
+[gancho + seÃ§Ãµes com ### + insights ðŸ’¡ + CTA ðŸŽ¯]
 
-Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, expandir, reformular para vídeo).`;
+Se o usuÃ¡rio colar um texto pronto, pergunte o que quer (adaptar tom, resumir, expandir, reformular para vÃ­deo).`;
 
-    // ═══════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // STEP 1: Buscar contexto RAG via IPAgent local
-    // ═══════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     let ragContext = '';
     let ragUsed = false;
     let ragDocCount = 0;
@@ -295,14 +295,14 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
 
                 if (ragDocCount > 0) {
                     ragUsed = true;
-                    ragContext = '\n═══ CONTEXTO RAG (Base de Dados) ═══\n';
+                    ragContext = '\nâ•â•â• CONTEXTO RAG (Base de Dados) â•â•â•\n';
                     if (literature.length > 0) {
-                        ragContext += '\n[LITERATURA CIENTÍFICA]:\n';
-                        literature.forEach((a, i) => ragContext += `--- Evidência ${i+1} ---\n${a}\n\n`);
+                        ragContext += '\n[LITERATURA CIENTÃFICA]:\n';
+                        literature.forEach((a, i) => ragContext += `--- EvidÃªncia ${i+1} ---\n${a}\n\n`);
                     }
                     if (consults.length > 0) {
                         ragContext += '\n[CONSULTAS ANTERIORES]:\n';
-                        consults.forEach((c, i) => ragContext += `--- Histórico ${i+1} ---\n${c}\n\n`);
+                        consults.forEach((c, i) => ragContext += `--- HistÃ³rico ${i+1} ---\n${c}\n\n`);
                     }
                 }
             }
@@ -314,21 +314,21 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
     // Build user message with context
     let fullUserMsg = '';
     if (editorContent.trim().length > 0) {
-        fullUserMsg += `[TEXTO JÁ EXISTENTE NO EDITOR]\n${editorContent.slice(0, 2000)}\n\n`;
+        fullUserMsg += `[TEXTO JÃ EXISTENTE NO EDITOR]\n${editorContent.slice(0, 2000)}\n\n`;
     }
     if (ragContext) {
         fullUserMsg += ragContext + '\n';
     }
-    fullUserMsg += `[PEDIDO DO USUÁRIO]\n${userMsg}`;
+    fullUserMsg += `[PEDIDO DO USUÃRIO]\n${userMsg}`;
 
     let fullResponse = '';
     const msgId = 'msg_' + Date.now() + '_ai';
 
-    // ═══════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // STEP 2: Gerar texto via Claude API (Anthropic) ou fallback para IPAgent
-    // ═══════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     if (claudeKey) {
-        // ── HYBRID MODE: Claude API com retry ──
+        // â”€â”€ HYBRID MODE: Claude API com retry â”€â”€
         const claudeModel = localStorage.getItem('cs_openrouter_model') || localStorage.getItem('cs_claude_model') || 'anthropic/claude-sonnet-4-20250514';
         const modelShort = claudeModel.split('/').pop().split('-').slice(0,2).join('-');
         setBadge('loading', `${modelShort}...`);
@@ -343,7 +343,7 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
             ], abortController.signal);
 
             removeThinking();
-            fullResponse = claudeData.content?.[0]?.text || '❌ Resposta vazia do Claude';
+            fullResponse = claudeData.content?.[0]?.text || 'âŒ Resposta vazia do Claude';
 
             renderMessage({
                 id: msgId,
@@ -356,7 +356,7 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
         } catch (e) {
             if (e.name === 'AbortError') {
                 removeThinking();
-                fullResponse = '⏹ Geração cancelada.';
+                fullResponse = 'â¹ GeraÃ§Ã£o cancelada.';
                 renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
             } else {
                 console.error('Claude API error:', e);
@@ -366,14 +366,14 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
             }
         }
     } else {
-        // ── IPAgent-only mode (no Claude key) ──
+        // â”€â”€ IPAgent-only mode (no Claude key) â”€â”€
         removeThinking();
         fullResponse = await fallbackToIPAgent(ipagentUrl, ipagentKey, fullUserMsg, systemPrompt, msgId, abortController);
     }
 
-    // ═══════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // STEP 3: Post-processing
-    // ═══════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     if (fullResponse) {
         chatHistory.push({
             id: msgId,
@@ -399,9 +399,9 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
                 const actions = document.createElement('div');
                 actions.className = 'chat-msg-actions';
                 actions.innerHTML = `
-                    <button onclick="insertMsgToEditor('${msgId}')">📝 Abrir na lousa</button>
-                    <button onclick="replaceMsgInEditor('${msgId}')">↻ Substituir</button>
-                    <button onclick="copyMsgContent('${msgId}')">⎘ Copiar</button>
+                    <button onclick="insertMsgToEditor('${msgId}')">ðŸ“ Abrir na lousa</button>
+                    <button onclick="replaceMsgInEditor('${msgId}')">â†» Substituir</button>
+                    <button onclick="copyMsgContent('${msgId}')">âŽ˜ Copiar</button>
                 `;
                 msgEl.querySelector('.chat-msg-content').appendChild(actions);
             }
@@ -415,8 +415,8 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
             showEditorWithContent(formatContent(fullResponse));
         }
 
-        // ═══ STEP 4: Salvar par de treinamento para Llama3 ═══
-        if (claudeKey && fullResponse && !fullResponse.startsWith('⏹') && !fullResponse.startsWith('⚠️')) {
+        // â•â•â• STEP 4: Salvar par de treinamento para Llama3 â•â•â•
+        if (claudeKey && fullResponse && !fullResponse.startsWith('â¹') && !fullResponse.startsWith('âš ï¸')) {
             saveTrainingPair(userMsg, fullResponse, ragContext);
         }
     }
@@ -428,7 +428,7 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
     setBadge(online ? 'online' : 'offline', online ? (claudeKey ? 'claude' : 'online') : 'offline');
 }
 
-// ── OpenRouter API com retry (evita queda de conexão) ──
+// â”€â”€ OpenRouter API com retry (evita queda de conexÃ£o) â”€â”€
 async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxRetries = 3) {
     let lastError;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -461,7 +461,7 @@ async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxR
 
             if (resp.ok) {
                 const data = await resp.json();
-                // Convert OpenAI format → Anthropic format for compatibility
+                // Convert OpenAI format â†’ Anthropic format for compatibility
                 return {
                     content: [{ text: data.choices?.[0]?.message?.content || '' }],
                     model: data.model,
@@ -473,10 +473,10 @@ async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxR
             const errMsg = errData.error?.message || `HTTP ${resp.status}`;
 
             if (resp.status === 401 || resp.status === 403) {
-                throw new Error(`🔑 Chave inválida: ${errMsg}`);
+                throw new Error(`ðŸ”‘ Chave invÃ¡lida: ${errMsg}`);
             }
             if (resp.status === 400) {
-                throw new Error(`❌ Erro de request: ${errMsg}`);
+                throw new Error(`âŒ Erro de request: ${errMsg}`);
             }
 
             lastError = new Error(`Tentativa ${attempt}/${maxRetries}: ${errMsg}`);
@@ -485,7 +485,7 @@ async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxR
         } catch (e) {
             if (e.name === 'AbortError') throw e;
             lastError = e;
-            if (e.message.includes('🔑') || e.message.includes('❌')) throw e;
+            if (e.message.includes('ðŸ”‘') || e.message.includes('âŒ')) throw e;
             console.warn(`OpenRouter retry ${attempt}/${maxRetries}:`, e.message);
         }
 
@@ -494,18 +494,18 @@ async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxR
             await new Promise(r => setTimeout(r, 2000 * Math.pow(2, attempt - 1)));
         }
     }
-    throw lastError || new Error('OpenRouter API falhou após todas as tentativas');
+    throw lastError || new Error('OpenRouter API falhou apÃ³s todas as tentativas');
 }
 
-// ── Destilação: salva par de treinamento para Llama3 ──
+// â”€â”€ DestilaÃ§Ã£o: salva par de treinamento para Llama3 â”€â”€
 function saveTrainingPair(userPrompt, claudeResponse, ragContext) {
     const TRAIN_KEY = 'cs_training_dataset';
     try {
         const dataset = JSON.parse(localStorage.getItem(TRAIN_KEY) || '[]');
 
-        // Formato Alpaca (compatível com Unsloth / fine-tuning)
+        // Formato Alpaca (compatÃ­vel com Unsloth / fine-tuning)
         dataset.push({
-            instruction: `Você é o assistente de conteúdo do Dr. Paulo Guimarães. Gere conteúdo médico para redes sociais no estilo do Dr. Paulo: provocativo, embasado em evidências, com ganchos virais e CTAs fortes.`,
+            instruction: `VocÃª Ã© o assistente de conteÃºdo do Dr. Paulo GuimarÃ£es. Gere conteÃºdo mÃ©dico para redes sociais no estilo do Dr. Paulo: provocativo, embasado em evidÃªncias, com ganchos virais e CTAs fortes.`,
             input: userPrompt + (ragContext ? '\n\n[CONTEXTO RAG]\n' + ragContext.slice(0, 2000) : ''),
             output: claudeResponse,
             category: 'content_generation',
@@ -514,16 +514,16 @@ function saveTrainingPair(userPrompt, claudeResponse, ragContext) {
         });
 
         localStorage.setItem(TRAIN_KEY, JSON.stringify(dataset));
-        console.log(`🎓 Par de treinamento #${dataset.length} salvo para Llama3`);
+        console.log(`ðŸŽ“ Par de treinamento #${dataset.length} salvo para Llama3`);
     } catch (e) {
         console.warn('Erro ao salvar treinamento:', e);
     }
 }
 
-// ── Fallback: IPAgent local ──
+// â”€â”€ Fallback: IPAgent local â”€â”€
 async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, controller) {
     if (!url) {
-        const msg = '⚠️ Configure a chave Claude em Configurações, ou ative o IPAgent local.';
+        const msg = 'âš ï¸ Configure a chave Claude em ConfiguraÃ§Ãµes, ou ative o IPAgent local.';
         renderMessage({ id: msgId, role: 'assistant', content: msg, timestamp: new Date().toISOString(), author: 'assistente' });
         return msg;
     }
@@ -550,6 +550,8 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
         });
 
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const contentType = resp.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) throw new Error('Not streamable');
 
         const assistantMsg = {
             id: msgId,
@@ -588,10 +590,10 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
                 body: JSON.stringify(payload),
             });
             const d = await resp.json();
-            fullResponse = d.content || ('❌ ' + (d.error || 'Erro'));
+            fullResponse = d.content || ('âŒ ' + (d.error || 'Erro'));
             renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
         } catch {
-            fullResponse = '⚠️ Não foi possível conectar ao agente.\n\n1. O IPagent está rodando localmente?\n2. O tunnel está ativo?\n3. A URL está configurada em Configurações?';
+            fullResponse = 'âš ï¸ NÃ£o foi possÃ­vel conectar ao agente.\n\n1. O IPagent estÃ¡ rodando localmente?\n2. O tunnel estÃ¡ ativo?\n3. A URL estÃ¡ configurada em ConfiguraÃ§Ãµes?';
             renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
         }
     }
@@ -599,7 +601,7 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
     return fullResponse;
 }
 
-// ─── Stop generation ───
+// â”€â”€â”€ Stop generation â”€â”€â”€
 function stopGeneration() {
     if (abortController) {
         abortController.abort();
@@ -609,7 +611,7 @@ function stopGeneration() {
     removeThinking();
     resetSendButton();
     setBadge(online ? 'online' : 'offline', online ? 'online' : 'offline');
-    toast('Geração interrompida');
+    toast('GeraÃ§Ã£o interrompida');
 }
 
 function resetSendButton() {
@@ -622,18 +624,18 @@ function resetSendButton() {
     sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
 }
 
-// ─── RAG Usage Log ───
+// â”€â”€â”€ RAG Usage Log â”€â”€â”€
 function addRagLog(msgEl, ragUsed) {
     const logDiv = document.createElement('div');
     logDiv.className = ragUsed ? 'rag-log' : 'rag-log no-rag';
     if (ragUsed) {
         logDiv.innerHTML = `
-            <span class="rag-log-icon">📚</span>
+            <span class="rag-log-icon">ðŸ“š</span>
             <span>IA utilizou a base de conhecimento (RAG) para gerar esta resposta</span>
         `;
     } else {
         logDiv.innerHTML = `
-            <span class="rag-log-icon">💭</span>
+            <span class="rag-log-icon">ðŸ’­</span>
             <span>Resposta gerada sem base de conhecimento (apenas modelo)</span>
         `;
     }
@@ -641,7 +643,7 @@ function addRagLog(msgEl, ragUsed) {
     if (content) content.appendChild(logDiv);
 }
 
-// ─── Message actions ───
+// â”€â”€â”€ Message actions â”€â”€â”€
 function insertMsgToEditor(msgId) {
     const msg = chatHistory.find(m => m.id === msgId);
     if (!msg) return;
@@ -661,7 +663,7 @@ function replaceMsgInEditor(msgId) {
     if (typeof showEditorWithContent === 'function') {
         showEditorWithContent(formatContent(msg.content));
     }
-    toast('Conteúdo substituído na lousa');
+    toast('ConteÃºdo substituÃ­do na lousa');
     logAudit('replace_editor', { msgId });
 }
 
@@ -676,7 +678,7 @@ function scrollChatToBottom() {
     requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
-// ─── Audit Trail ───
+// â”€â”€â”€ Audit Trail â”€â”€â”€
 const AUDIT_KEY = 'cs_audit_log';
 
 function logAudit(action, details = {}) {
@@ -696,7 +698,7 @@ function logAudit(action, details = {}) {
     } catch {}
 }
 
-// ─── Project Groups ───
+// â”€â”€â”€ Project Groups â”€â”€â”€
 const GROUPS_KEY = 'cs_project_groups';
 
 function getGroups() {
@@ -723,7 +725,7 @@ function createGroup(name) {
 }
 
 function deleteGroup(groupId) {
-    if (!confirm('Excluir este grupo? Os documentos serão desagrupados.')) return;
+    if (!confirm('Excluir este grupo? Os documentos serÃ£o desagrupados.')) return;
     const groups = getGroups().filter(g => g.id !== groupId);
     saveGroups(groups);
     // Ungroup all projects in this group
@@ -751,14 +753,14 @@ function moveToGroup(projectId, groupId) {
     }
 }
 
-// ─── Enhanced File List with Groups ───
+// â”€â”€â”€ Enhanced File List with Groups â”€â”€â”€
 function renderFilesGrouped() {
     const el = document.getElementById('fileList');
     const all = projects();
     const groups = getGroups();
 
     if (!all.length && !groups.length) {
-        el.innerHTML = '<div style="padding:30px 14px;text-align:center;color:var(--text-4);font-size:12px;">Nenhum documento.<br>Clique em "+ Novo" para começar.</div>';
+        el.innerHTML = '<div style="padding:30px 14px;text-align:center;color:var(--text-4);font-size:12px;">Nenhum documento.<br>Clique em "+ Novo" para comeÃ§ar.</div>';
         return;
     }
 
@@ -767,7 +769,7 @@ function renderFilesGrouped() {
     // New Group button
     html += `<div style="padding:4px 12px 8px;">
         <button class="sidebar-new-btn" style="font-size:11px;padding:6px;border-style:dotted;" onclick="promptNewGroup()">
-            <span style="font-size:10px;">📁</span> Novo grupo
+            <span style="font-size:10px;">ðŸ“</span> Novo grupo
         </button>
     </div>`;
 
@@ -778,13 +780,13 @@ function renderFilesGrouped() {
         const groupProjects = all.filter(p => p.groupId === group.id);
         groupProjects.forEach(p => groupedIds.add(p.id));
 
-        const collapseIcon = group.collapsed ? '▸' : '▾';
+        const collapseIcon = group.collapsed ? 'â–¸' : 'â–¾';
         html += `<div class="file-group">
             <div class="file-group-header" onclick="toggleGroupCollapse('${group.id}')">
                 <span class="file-group-icon">${collapseIcon}</span>
                 <span class="file-group-name">${group.name}</span>
                 <span class="file-group-count">${groupProjects.length}</span>
-                <button class="file-group-delete" onclick="event.stopPropagation();deleteGroup('${group.id}')" title="Excluir grupo">×</button>
+                <button class="file-group-delete" onclick="event.stopPropagation();deleteGroup('${group.id}')" title="Excluir grupo">Ã—</button>
             </div>`;
 
         if (!group.collapsed) {
@@ -814,10 +816,10 @@ function renderFilesGrouped() {
 }
 
 function renderFileItem(p) {
-    const icon = { youtube: '▶', instagram: '○', carousel: '□' }[p.platform] || '○';
+    const icon = { youtube: 'â–¶', instagram: 'â—‹', carousel: 'â–¡' }[p.platform] || 'â—‹';
     const badge = { youtube: 'YT', instagram: 'IG', carousel: 'CR' }[p.platform] || '';
     const cls = { youtube: 'badge-yt', instagram: 'badge-ig', carousel: 'badge-cr' }[p.platform] || '';
-    const title = p.title || 'Sem título';
+    const title = p.title || 'Sem tÃ­tulo';
     return `<div class="file-item ${p.id === curId ? 'active' : ''}" onclick="openDoc('${p.id}')" draggable="true" ondragstart="dragFile(event,'${p.id}')">
         <span class="file-icon">${icon}</span>
         <span class="file-name">${title}</span>
@@ -835,7 +837,7 @@ function dragFile(e, projectId) {
     e.dataTransfer.setData('text/plain', projectId);
 }
 
-// ─── Override renderFiles to use grouped version ───
+// â”€â”€â”€ Override renderFiles to use grouped version â”€â”€â”€
 const _originalRenderFiles = typeof renderFiles === 'function' ? renderFiles : null;
 
 // Replace renderFiles globally
@@ -847,7 +849,7 @@ window.renderFiles = function(filter) {
     }
 };
 
-// ─── Load chat when switching documents ───
+// â”€â”€â”€ Load chat when switching documents â”€â”€â”€
 const _originalOpenDoc = typeof openDoc === 'function' ? openDoc : null;
 if (_originalOpenDoc) {
     window.openDoc = function(id) {
@@ -861,20 +863,20 @@ if (_originalOpenDoc) {
         } else {
             container.innerHTML = `
                 <div class="chat-welcome">
-                    <div class="chat-welcome-icon">✦</div>
+                    <div class="chat-welcome-icon">âœ¦</div>
                     <h3>Creative Studio</h3>
-                    <p>Seu assistente de criação de conteúdo. Peça para criar, refinar ou reescrever textos para vídeo.</p>
+                    <p>Seu assistente de criaÃ§Ã£o de conteÃºdo. PeÃ§a para criar, refinar ou reescrever textos para vÃ­deo.</p>
                     <div class="chat-suggestions">
                         <button class="chip" onclick="sendSuggestion('Crie um roteiro de 5 min sobre tirzepatida')">Roteiro: tirzepatida</button>
                         <button class="chip" onclick="sendSuggestion('Reescreva o texto do editor com tom mais provocativo')">Reescrever com outro tom</button>
-                        <button class="chip" onclick="sendSuggestion('Adicione uma introdução impactante ao texto')">Introdução impactante</button>
+                        <button class="chip" onclick="sendSuggestion('Adicione uma introduÃ§Ã£o impactante ao texto')">IntroduÃ§Ã£o impactante</button>
                     </div>
                 </div>`;
         }
     };
 }
 
-// ─── Init on load ───
+// â”€â”€â”€ Init on load â”€â”€â”€
 document.addEventListener('DOMContentLoaded', () => {
     initChat();
     // Re-render files with groups
@@ -886,3 +888,5 @@ if (document.readyState !== 'loading') {
     initChat();
     renderFilesGrouped();
 }
+
+

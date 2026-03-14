@@ -1,9 +1,9 @@
-/**
- * Creative Studio — Workspace Logic
+﻿/**
+ * Creative Studio â€” Workspace Logic
  * Conecta ao IPagent local via tunnel.
  */
 
-// ─── Editor/Lousa toggle ───
+// â”€â”€â”€ Editor/Lousa toggle â”€â”€â”€
 function toggleEditor(forceState) {
     const pane = document.getElementById('editorPane');
     if (!pane) return;
@@ -39,16 +39,16 @@ document.getElementById('sidebarName').textContent = S.name || S.username;
 document.getElementById('sidebarRole').textContent = S.role;
 document.getElementById('sidebarAvatar').textContent = (S.name || S.username).charAt(0).toUpperCase();
 
-// ─── State ───
+// â”€â”€â”€ State â”€â”€â”€
 const PK = 'cs_projects', SK = 'cs_settings';
 let curId = null, curPlat = 'youtube', generating = false, saveTimer = null, online = false;
 
-// ─── Settings ───
+// â”€â”€â”€ Settings â”€â”€â”€
 const settings = () => { try { return JSON.parse(localStorage.getItem(SK)||'{}'); } catch { return {}; } };
-const agentUrl = () => (settings().agentUrl || 'http://localhost:5000').replace(/\/$/,'');
+const agentUrl = () => (settings().agentUrl || 'http://localhost:5050').replace(/\/$/,'');
 const apiKey  = () => settings().apiKey || '';
 
-// ─── Projects CRUD ───
+// â”€â”€â”€ Projects CRUD â”€â”€â”€
 const projects = () => { try { return JSON.parse(localStorage.getItem(PK)||'[]'); } catch { return []; } };
 const saveAll  = p => localStorage.setItem(PK, JSON.stringify(p));
 const findProj = id => projects().find(p => p.id === id);
@@ -87,7 +87,7 @@ function openDoc(id) {
     if (toneEl) toneEl.value = p.tone || 'educativo';
     pickPlatform(curPlat, false);
     updateMeta();
-    updateSave('Carregado ✓');
+    updateSave('Carregado âœ“');
     renderFiles();
     // Show editor pane (lousa)
     const pane = document.getElementById('editorPane');
@@ -121,17 +121,17 @@ function autoSave() {
     clearTimeout(saveTimer);
     updateMeta();
     updateSave('Salvando...');
-    saveTimer = setTimeout(() => { saveCurrent(); updateSave('Salvo ✓'); renderFiles(); }, 600);
+    saveTimer = setTimeout(() => { saveCurrent(); updateSave('Salvo âœ“'); renderFiles(); }, 600);
 }
 
-// ─── File list ───
+// â”€â”€â”€ File list â”€â”€â”€
 function renderFiles(filter) {
     const el = document.getElementById('fileList');
     let all = projects();
     if (filter) { const f = filter.toLowerCase(); all = all.filter(p => (p.title||'').toLowerCase().includes(f) || (p.topic||'').toLowerCase().includes(f)); }
 
     if (!all.length) {
-        el.innerHTML = '<div style="padding:30px 14px;text-align:center;color:var(--text-4);font-size:12px;">Nenhum documento.<br>Clique em "+ Novo" para começar.</div>';
+        el.innerHTML = '<div style="padding:30px 14px;text-align:center;color:var(--text-4);font-size:12px;">Nenhum documento.<br>Clique em "+ Novo" para comeÃ§ar.</div>';
         return;
     }
 
@@ -139,7 +139,7 @@ function renderFiles(filter) {
         const icon = {youtube:'\u25B6',instagram:'\u25CB',carousel:'\u25A1'}[p.platform]||'\u25CB';
         const badge = {youtube:'YT',instagram:'IG',carousel:'CR'}[p.platform]||'';
         const cls = {youtube:'badge-yt',instagram:'badge-ig',carousel:'badge-cr'}[p.platform]||'';
-        const title = p.title || 'Sem título';
+        const title = p.title || 'Sem tÃ­tulo';
         return `<div class="file-item ${p.id===curId?'active':''}" onclick="openDoc('${p.id}')">
             <span class="file-icon">${icon}</span>
             <span class="file-name">${title}</span>
@@ -148,7 +148,7 @@ function renderFiles(filter) {
     }).join('');
 }
 
-// ─── Editor helpers ───
+// â”€â”€â”€ Editor helpers â”€â”€â”€
 function fmt(cmd, val) { document.execCommand(cmd, false, val||null); document.getElementById('editor').focus(); }
 function wordCount() { const t = document.getElementById('editor').innerText||''; return t.trim() ? t.trim().split(/\s+/).length : 0; }
 function updateMeta() {
@@ -180,12 +180,12 @@ function deleteCurrentProject() {
     delProj(curId); curId = null;
     document.getElementById('docTitle').value = '';
     document.getElementById('editor').innerHTML = '';
-    renderFiles(); closeModal(); toast('Documento excluído');
+    renderFiles(); closeModal(); toast('Documento excluÃ­do');
     const all = projects();
     if (all.length) openDoc(all[0].id);
 }
 
-// ─── Platform ───
+// â”€â”€â”€ Platform â”€â”€â”€
 function pickPlatform(p, save=true) {
     curPlat = p;
     document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.p === p));
@@ -199,7 +199,7 @@ function pickPlatform(p, save=true) {
 
 function setTopic(t) { const el = document.getElementById('topic'); if (el) el.value = t; }
 
-// ─── AI Generation (connected to IPagent) ───
+// â”€â”€â”€ AI Generation (connected to IPagent) â”€â”€â”€
 async function generate() {
     const topic = document.getElementById('topic').value.trim();
     if (!topic) { toast('Digite um tema'); return; }
@@ -229,8 +229,10 @@ async function generate() {
     let full = '';
 
     try {
-        const resp = await fetch(`${url}/api/content/generate`, { method:'POST', headers, body: JSON.stringify(payload) });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const resp = await fetch(`${url}/api/content/generate`, { method:'POST', headers, body: JSON.stringify(payload) });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const contentType = resp.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) throw new Error('Not streamable');
         const reader = resp.body.getReader();
         const dec = new TextDecoder();
         while (true) {
@@ -254,14 +256,14 @@ async function generate() {
             const resp = await fetch(`${url}/api/content/generate-sync`, { method:'POST', headers, body: JSON.stringify(payload) });
             const d = await resp.json();
             if (d.content) { full = d.content; out.textContent = full; }
-            else if (d.error) out.textContent = '❌ ' + d.error;
+            else if (d.error) out.textContent = 'âŒ ' + d.error;
         } catch {
-            out.textContent = 'Agente inacessível.\n\n1. IPagent rodando local?\n2. Tunnel (ngrok) ativo?\n3. URL configurada em Configurações?';
+            out.textContent = 'Agente inacessÃ­vel.\n\n1. IPagent rodando local?\n2. Tunnel (ngrok) ativo?\n3. URL configurada em ConfiguraÃ§Ãµes?';
         }
     }
 
     generating = false;
-    btn.classList.remove('loading'); btn.textContent = 'Gerar conteúdo';
+    btn.classList.remove('loading'); btn.textContent = 'Gerar conteÃºdo';
     acts.classList.add('visible');
     setBadge(online ? 'online' : 'offline', online ? 'online' : 'offline');
 
@@ -282,14 +284,14 @@ function insertToEditor() {
 function replaceEditor() {
     const t = document.getElementById('aiOut').textContent; if (!t) return;
     document.getElementById('editor').innerHTML = t.replace(/\n/g,'<br>');
-    autoSave(); toast('Conteúdo substituído');
+    autoSave(); toast('ConteÃºdo substituÃ­do');
 }
 
 function copyAi() {
     navigator.clipboard.writeText(document.getElementById('aiOut').textContent).then(() => toast('Copiado'));
 }
 
-// ─── Agent Health ───
+// â”€â”€â”€ Agent Health â”€â”€â”€
 function setBadge(state, text) {
     const b = document.getElementById('agentBadge');
     b.className = 'status-badge status-' + state;
@@ -314,14 +316,14 @@ async function checkAgent() {
     }
 }
 
-// ─── Export / Import ───
+// â”€â”€â”€ Export / Import â”€â”€â”€
 function exportAll() {
     const all = projects();
     if (!all.length) { toast('Nada para exportar'); return; }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(all,null,2)], {type:'application/json'}));
     a.download = `content-studio-${new Date().toISOString().slice(0,10)}.json`;
-    a.click(); toast(`📥 ${all.length} docs exportados`);
+    a.click(); toast(`ðŸ“¥ ${all.length} docs exportados`);
 }
 
 function importProjects() { document.getElementById('importInput').click(); }
@@ -336,29 +338,30 @@ function handleImport(ev) {
             const cur = projects(), ids = new Set(cur.map(p=>p.id));
             let n = 0;
             for (const p of imp) if (!ids.has(p.id)) { cur.unshift(p); n++; }
-            saveAll(cur); renderFiles(); toast(`📤 ${n} importados`);
-        } catch { toast('❌ Arquivo inválido'); }
+            saveAll(cur); renderFiles(); toast(`ðŸ“¤ ${n} importados`);
+        } catch { toast('âŒ Arquivo invÃ¡lido'); }
     };
     r.readAsText(f); ev.target.value = '';
 }
 
-// ─── Toast ───
+// â”€â”€â”€ Toast â”€â”€â”€
 function toast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ─── Keyboard ───
+// â”€â”€â”€ Keyboard â”€â”€â”€
 document.addEventListener('keydown', e => {
-    if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveCurrent(); updateSave('Salvo ✓'); toast('Salvo'); }
+    if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveCurrent(); updateSave('Salvo âœ“'); toast('Salvo'); }
     if ((e.ctrlKey||e.metaKey) && e.key==='n') { e.preventDefault(); createNewProject(); }
     if ((e.ctrlKey||e.metaKey) && e.key==='Enter') { e.preventDefault(); generate(); }
 });
 
-// ─── Init ───
+// â”€â”€â”€ Init â”€â”€â”€
 renderFiles();
 const all = projects();
 if (all.length) openDoc(all[0].id);
 checkAgent();
 setInterval(checkAgent, 15000);
+
