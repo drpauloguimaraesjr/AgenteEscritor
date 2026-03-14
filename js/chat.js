@@ -358,6 +358,14 @@ Se o usuÃ¡rio colar um texto pronto, pergunte o que quer (adaptar tom, resumir
                 removeThinking();
                 fullResponse = 'â¹ GeraÃ§Ã£o cancelada.';
                 renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
+            } else if (e.message.includes('🔑') || e.message.includes('❌') || e.message.includes('Chave inv') || e.message.includes('Erro de request')) {
+                removeThinking();
+                fullResponse = '⚠️ **A conexão com a OpenRouter falhou!**\n\nDetalhe do Erro: ' + e.message + '\n\nIsso aconteceu porque o modo Híbrido estava ativo, mas a geração de texto foi bloqueada. Verifique as *Configurações* e confirme se sua conta da OpenRouter tem créditos (saldo positivo em "Billing") para rodar modelos avançados.';
+                renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
+                       } else if (e.message.includes('🔑') || e.message.includes('❌') || e.message.includes('Chave inv') || e.message.includes('Erro de request')) {
+                removeThinking();
+                fullResponse = '⚠️ **A conexão com a OpenRouter falhou!**\n\nDetalhe do Erro: ' + e.message + '\n\nIsso aconteceu porque o modo Híbrido estava ativo, mas a geração de texto foi bloqueada. Verifique as *Configurações* e confirme se sua conta da OpenRouter tem créditos (saldo positivo em "Billing") para rodar modelos avançados.';
+                renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
             } else {
                 console.error('Claude API error:', e);
                 // Fallback to IPAgent
@@ -530,6 +538,7 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
 
     const payload = {
         topic: systemPrompt + '\n\n' + userMsg,
+        query: userMsg,
         platform: curPlat || 'youtube',
         tone: document.getElementById('tone')?.value || 'educativo',
         duration: parseInt(document.getElementById('dur')?.value || '300'),

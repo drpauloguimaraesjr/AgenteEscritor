@@ -132,6 +132,8 @@ def search_knowledge(query, limit=10):
     # Clean query for FTS5
     clean = re.sub(r'[^\w\sáàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]', ' ', query)
     tokens = clean.split()
+    stopwords = {'a', 'o', 'e', 'que', 'de', 'do', 'da', 'em', 'um', 'uma', 'para', 'com', 'os', 'as', 'na', 'no', 'dos', 'das', 'uma', 'umas', 'uns'}
+    tokens = [t for t in tokens if t.lower() not in stopwords]
     if not tokens:
         return []
     
@@ -298,7 +300,13 @@ def api_generate_sync():
     tone = data.get("tone", "educativo")
     
     # Extract user query from topic
-    query = topic.split("[PEDIDO DO USUÁRIO]")[-1].strip() if "[PEDIDO DO USUÁRIO]" in topic else topic[-500:]
+    base_query = data.get("query", "")
+    if base_query:
+        query = base_query
+    elif "[PEDIDO DO USUÁRIO]" in topic:
+        query = topic.split("[PEDIDO DO USUÁRIO]")[-1].strip()
+    else:
+        query = topic[-500:]
     
     results = search_knowledge(query, 8)
     style = get_style_dna()
