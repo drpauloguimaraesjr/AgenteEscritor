@@ -244,7 +244,7 @@ ESTRUTURA OBRIGATÃ“RIA DO TEXTO:
 
 7. CTA FORTE com ðŸŽ¯
    Ex: "ðŸŽ¯ Encaminhe este vÃ­deo para aquela pessoa que vive falando mal de hormÃ´nio."
-   Ex: "Me segue pra conteÃºdo com referÃªncia aplicada â€” nÃ£o manchete mastigada."
+   Ex: "Me segue pra Conteudo com referÃªncia aplicada â€” nÃ£o manchete mastigada."
 
 CARACTERÃSTICAS DO TOM:
 - Provocativo mas embasado em evidÃªncias
@@ -329,7 +329,7 @@ Se o usuÃ¡rio colar um texto pronto, pergunte o que quer (adaptar tom, resumir
     // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     if (claudeKey) {
         // â”€â”€ HYBRID MODE: Claude API com retry â”€â”€
-        const claudeModel = localStorage.getItem('cs_openrouter_model') || localStorage.getItem('cs_claude_model') || 'anthropic/claude-sonnet-4-20250514';
+        const claudeModel = localStorage.getItem('cs_openrouter_model') || localStorage.getItem('cs_claude_model') || 'anthropic/claude-3.5-sonnet';
         const modelShort = claudeModel.split('/').pop().split('-').slice(0,2).join('-');
         setBadge('loading', `${modelShort}...`);
 
@@ -502,7 +502,7 @@ function saveTrainingPair(userPrompt, claudeResponse, ragContext) {
 
         // Formato Alpaca (compatÃ­vel com Unsloth / fine-tuning)
         dataset.push({
-            instruction: `VocÃª Ã© o assistente de conteÃºdo do Dr. Paulo GuimarÃ£es. Gere conteÃºdo mÃ©dico para redes sociais no estilo do Dr. Paulo: provocativo, embasado em evidÃªncias, com ganchos virais e CTAs fortes.`,
+            instruction: `VocÃª Ã© o assistente de Conteudo do Dr. Paulo GuimarÃ£es. Gere Conteudo mÃ©dico para redes sociais no estilo do Dr. Paulo: provocativo, embasado em evidÃªncias, com ganchos virais e CTAs fortes.`,
             input: userPrompt + (ragContext ? '\n\n[CONTEXTO RAG]\n' + ragContext.slice(0, 2000) : ''),
             output: claudeResponse,
             category: 'content_generation',
@@ -644,7 +644,7 @@ function addRagLog(msgEl, ragUsed) {
 function insertMsgToEditor(msgId) {
     // Botao: Adicionar a lousa
     const msg = chatHistory.find(m => m.id === msgId);
-    if (!msg) return;
+    if (!msg) { console.error('Msg not found in history', msgId); return; }
     // Open lousa with content appended
     if (typeof showEditorWithContent === 'function') {
         const ed = document.getElementById('editor');
@@ -658,17 +658,17 @@ function insertMsgToEditor(msgId) {
 function replaceMsgInEditor(msgId) {
     // Botao: Substituir lousa
     const msg = chatHistory.find(m => m.id === msgId);
-    if (!msg) return;
+    if (!msg) { console.error('Msg not found in history', msgId); return; }
     if (typeof showEditorWithContent === 'function') {
         showEditorWithContent(formatContent(msg.content));
     }
-    toast('ConteÃºdo substituÃ­do na lousa');
+    toast('Conteudo substituido na lousa');
     logAudit('replace_editor', { msgId });
 }
 
 function copyMsgContent(msgId) {
     const msg = chatHistory.find(m => m.id === msgId);
-    if (!msg) return;
+    if (!msg) { console.error('Msg not found in history', msgId); return; }
     navigator.clipboard.writeText(msg.content).then(() => toast('Copiado'));
 }
 
@@ -864,7 +864,7 @@ if (_originalOpenDoc) {
                 <div class="chat-welcome">
                     <div class="chat-welcome-icon">âœ¦</div>
                     <h3>Creative Studio</h3>
-                    <p>Seu assistente de criaÃ§Ã£o de conteÃºdo. PeÃ§a para criar, refinar ou reescrever textos para vÃ­deo.</p>
+                    <p>Seu assistente de criaÃ§Ã£o de Conteudo. PeÃ§a para criar, refinar ou reescrever textos para vÃ­deo.</p>
                     <div class="chat-suggestions">
                         <button class="chip" onclick="sendSuggestion('Crie um roteiro de 5 min sobre tirzepatida')">Roteiro: tirzepatida</button>
                         <button class="chip" onclick="sendSuggestion('Reescreva o texto do editor com tom mais provocativo')">Reescrever com outro tom</button>
