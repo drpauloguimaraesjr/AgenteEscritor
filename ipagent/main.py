@@ -327,6 +327,6 @@ if __name__ == "__main__":
     print("  IPagent - Content Studio Local Agent")
     print("=" * 50)
     init_db()
-    print(f"\n🚀 Servidor rodando em http://127.0.0.1:5000")
+    print(f"\n🚀 Servidor rodando em http://127.0.0.1:5050")
     print(f"   Ctrl+C para parar\n")
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5050, debug=False)
