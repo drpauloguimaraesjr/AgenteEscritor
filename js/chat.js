@@ -428,40 +428,28 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
     setBadge(online ? 'online' : 'offline', online ? (claudeKey ? 'claude' : 'online') : 'offline');
 }
 
-// ── OpenRouter API com retry (evita queda de conexão) ──
+// ── API Railway com retry (evita queda de conexão) ──
 async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxRetries = 3) {
     let lastError;
+    const RAILWAY_URL = 'https://agente-backend-production.up.railway.app'; // URL provisória da sua API
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            // Prepend system message to messages array (OpenAI format)
-            const fullMessages = [
-                { role: 'system', content: system },
-                ...messages
-            ];
-
-            const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const resp = await fetch(`${RAILWAY_URL}/api/chat`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': window.location.origin,
-                    'X-Title': 'Creative Studio - Dr. Paulo',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     model,
-                    max_tokens: 4096,
-                    messages: fullMessages,
-                    provider: {
-                        order: ['Anthropic', 'OpenAI'],
-                        allow_fallbacks: true,
-                    },
+                    system,
+                    messages
                 }),
                 signal,
             });
 
             if (resp.ok) {
                 const data = await resp.json();
-                // Convert OpenAI format → Anthropic format for compatibility
                 return {
                     content: [{ text: data.choices?.[0]?.message?.content || '' }],
                     model: data.model,
@@ -471,30 +459,18 @@ async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxR
 
             const errData = await resp.json().catch(() => ({}));
             const errMsg = errData.error?.message || `HTTP ${resp.status}`;
-
-            if (resp.status === 401 || resp.status === 403) {
-                throw new Error(`🔑 Chave inválida: ${errMsg}`);
-            }
-            if (resp.status === 400) {
-                throw new Error(`❌ Erro de request: ${errMsg}`);
-            }
-
-            lastError = new Error(`Tentativa ${attempt}/${maxRetries}: ${errMsg}`);
-            console.warn(`OpenRouter retry ${attempt}/${maxRetries}:`, errMsg);
+            throw new Error(`Erro na API: ${errMsg}`);
 
         } catch (e) {
             if (e.name === 'AbortError') throw e;
             lastError = e;
-            if (e.message.includes('🔑') || e.message.includes('❌')) throw e;
-            console.warn(`OpenRouter retry ${attempt}/${maxRetries}:`, e.message);
         }
 
-        // Backoff exponencial: 2s, 4s, 8s
         if (attempt < maxRetries) {
             await new Promise(r => setTimeout(r, 2000 * Math.pow(2, attempt - 1)));
         }
     }
-    throw lastError || new Error('OpenRouter API falhou após todas as tentativas');
+    throw lastError || new Error('API falhou após todas as tentativas');
 }
 
 // ── Destilação: salva par de treinamento para Llama3 ──
