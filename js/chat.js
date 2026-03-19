@@ -362,13 +362,13 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
                 console.error('Claude API error:', e);
                 // Fallback to IPAgent
                 removeThinking();
-                fullResponse = await fallbackToIPAgent(ipagentUrl, ipagentKey, fullUserMsg, systemPrompt, msgId, abortController);
+                fullResponse = await callHybridAgent(ipagentUrl, ipagentKey, fullUserMsg, msgId, abortController);
             }
         }
     } else {
-        // ── IPAgent-only mode (no Claude key) ──
+        // ── Agente Híbrido Primário (Sem chave Claude) ──
         removeThinking();
-        fullResponse = await fallbackToIPAgent(ipagentUrl, ipagentKey, fullUserMsg, systemPrompt, msgId, abortController);
+        fullResponse = await callHybridAgent(ipagentUrl, ipagentKey, fullUserMsg, msgId, abortController);
     }
 
     // ═══════════════════════════════════════════
@@ -515,10 +515,10 @@ function saveTrainingPair(userPrompt, claudeResponse, ragContext) {
     }
 }
 
-// ── Fallback: IPAgent local ──
-async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, controller) {
+// ── API Agente Híbrido (Backend Rest Oficial) ──
+async function callHybridAgent(url, key, fullUserMsg, msgId, controller) {
     if (!url) {
-        const msg = '⚠️ Configure a chave Claude em Configurações, ou ative o IPAgent local.';
+        const msg = '⚠️ Configure a URL do Agente Híbrido em Configurações.';
         renderMessage({ id: msgId, role: 'assistant', content: msg, timestamp: new Date().toISOString(), author: 'assistente' });
         return msg;
     }
@@ -527,24 +527,25 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
     if (key) headers['Authorization'] = `Bearer ${key}`;
 
     const payload = {
-        topic: systemPrompt + '\n\n' + userMsg,
-        platform: curPlat || 'youtube',
-        tone: document.getElementById('tone')?.value || 'educativo',
-        duration: parseInt(document.getElementById('dur')?.value || '300'),
-        use_rag: true,
+        message: fullUserMsg,
+        use_context: document.getElementById('useRag')?.checked ?? true
     };
 
     let fullResponse = '';
 
     try {
-        const resp = await fetch(`${url}/api/content/generate`, {
+        // Tenta primeiro a rota de streaming (Typing effect)
+        const resp = await fetch(`${url}/api/chat/stream`, {
             method: 'POST',
             headers,
             body: JSON.stringify(payload),
             signal: controller?.signal,
         });
 
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        if (!resp.ok) {
+            // Se o streaming falhar (ex: 404), cai para o bloco catch que tenta o modo Básico
+            throw new Error(`Streaming failed: HTTP ${resp.status}`);
+        }
 
         const assistantMsg = {
             id: msgId,
@@ -564,10 +565,14 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
             if (done) break;
             for (const line of dec.decode(value, { stream: true }).split('\n')) {
                 if (line.startsWith('data: ')) {
+                    const dataStr = line.slice(6).trim();
+                    if (dataStr === '[DONE]') continue;
                     try {
-                        const d = JSON.parse(line.slice(6));
-                        if (d.token) {
-                            fullResponse += d.token;
+                        const d = JSON.parse(dataStr);
+                        // O chunk pode vir como text, token ou response dependendo do framework SSE
+                        const chunkText = d.response || d.token || d.text || '';
+                        if (chunkText) {
+                            fullResponse += chunkText;
                             if (bubble) bubble.innerHTML = formatContent(fullResponse);
                             scrollChatToBottom();
                         }
@@ -575,18 +580,27 @@ async function fallbackToIPAgent(url, key, userMsg, systemPrompt, msgId, control
                 }
             }
         }
-    } catch {
+    } catch (streamError) {
+        console.warn('Fallback para modo básico (sem stream):', streamError.message);
         try {
-            const resp = await fetch(`${url}/api/content/generate-sync`, {
+            // Se o streaming falhou, roda a ROTA BÁSICA obrigatória do contrato
+            const resp = await fetch(`${url}/api/chat`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(payload),
+                signal: controller?.signal,
             });
+            
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            
             const d = await resp.json();
-            fullResponse = d.content || ('❌ ' + (d.error || 'Erro'));
+            // Contrato impõe ler exatamente a string dentro de "response"
+            fullResponse = d.response || ('❌ Falha ao processar variável "response"');
+            
             renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
-        } catch {
-            fullResponse = '⚠️ Não foi possível conectar ao agente.\n\n1. O IPagent está rodando localmente?\n2. O tunnel está ativo?\n3. A URL está configurada em Configurações?';
+        } catch (basicError) {
+            console.error('API Error:', basicError);
+            fullResponse = '⚠️ Conexão com Agente Híbrido recusada.\n\nVerifique se o Tunnel está ativo e se o Bearer Token está correto nas Configurações.';
             renderMessage({ id: msgId, role: 'assistant', content: fullResponse, timestamp: new Date().toISOString(), author: 'assistente' });
         }
     }
