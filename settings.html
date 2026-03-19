@@ -33,15 +33,15 @@
 
         <!-- Agent connection -->
         <div class="settings-card">
-            <h3>🔗 Conexão com o Agente (RAG Local)</h3>
+            <h3>🔗 Conexão com o Agente Híbrido</h3>
             <div class="form-group">
-                <label>URL do Tunnel</label>
-                <input type="url" id="agentUrl" placeholder="https://xxxx.ngrok-free.app">
-                <p class="help-text">Cole a URL do tunnel que aponta para o IPagent. Local: <code>http://localhost:5000</code></p>
+                <label>URL do Agente (Endpoint REST)</label>
+                <input type="url" id="agentUrl" placeholder="https://seu-agente.app">
+                <p class="help-text">Cole a URL que aponta para o Agente Híbrido.</p>
             </div>
             <div class="form-group">
-                <label>API Key (opcional)</label>
-                <input type="text" id="apiKey" placeholder="sk-IPagent-...">
+                <label>Chave Secreta do Agente (opcional)</label>
+                <input type="text" id="apiKey" placeholder="Sua Chave Híbrida">
             </div>
             <div style="display:flex;gap:8px;margin-top:8px;">
                 <button class="btn btn-brand btn-sm" onclick="saveConn()">💾 Salvar</button>
