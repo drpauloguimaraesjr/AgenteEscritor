@@ -210,14 +210,22 @@ async function generate() {
     acts.classList.remove('visible');
     setBadge('loading', 'gerando...');
 
-    const payload = { topic, platform: curPlat, tone, duration: dur, use_rag: rag };
-    const headers = { 'Content-Type': 'application/json' };
-    if (key) headers['Authorization'] = `Bearer ${key}`;
+    // Montando o 'message' com todos os direcionamentos (contexto)
+    const fullMessage = `TEMA: ${topic}\nPLATAFORMA: ${curPlat}\nTOM: ${tone}\nDURAÇÃO ALVO: ${dur}s\n\nPor favor, escreva o roteiro do zero.`;
+    
+    const payload = { 
+        message: fullMessage, 
+        use_context: rag 
+    };
+    
+    const h = new Headers();
+    h.append('Content-Type', 'application/json');
+    if (key) h.append('Authorization', `Bearer ${key}`);
 
     let full = '';
 
     try {
-        const resp = await fetch(`${url}/api/content/generate`, { method:'POST', headers, body: JSON.stringify(payload) });
+        const resp = await fetch(`${url}/api/chat/stream`, { method:'POST', headers: h, body: JSON.stringify(payload) });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const reader = resp.body.getReader();
         const dec = new TextDecoder();
@@ -226,10 +234,13 @@ async function generate() {
             if (done) break;
             for (const line of dec.decode(value, {stream:true}).split('\n')) {
                 if (line.startsWith('data: ')) {
+                    const dataStr = line.slice(6).trim();
+                    if (dataStr === '[DONE]') continue;
                     try {
-                        const d = JSON.parse(line.slice(6));
-                        if (d.token) {
-                            full += d.token;
+                        const d = JSON.parse(dataStr);
+                        const chunkText = d.response || d.token || d.text || '';
+                        if (chunkText) {
+                            full += chunkText;
                             out.textContent = full;
                             out.scrollTop = out.scrollHeight;
                         }
@@ -239,12 +250,12 @@ async function generate() {
         }
     } catch {
         try {
-            const resp = await fetch(`${url}/api/content/generate-sync`, { method:'POST', headers, body: JSON.stringify(payload) });
+            const resp = await fetch(`${url}/api/chat`, { method:'POST', headers: h, body: JSON.stringify(payload) });
             const d = await resp.json();
-            if (d.content) { full = d.content; out.textContent = full; }
-            else if (d.error) out.textContent = '❌ ' + d.error;
+            if (d.response) { full = d.response; out.textContent = full; }
+            else out.textContent = '❌ ' + (d.error || 'Erro: Retorno sem a chave response');
         } catch {
-            out.textContent = 'Agente inacessível.\n\n1. IPagent rodando local?\n2. Tunnel (ngrok) ativo?\n3. URL configurada em Configurações?';
+            out.textContent = 'Agente inacessível.\n\n1. IPagent rodando local?\n2. Tunnel (Cloudflare) ativo?\n3. URL e Chave configuradas nas Configurações?';
         }
     }
 

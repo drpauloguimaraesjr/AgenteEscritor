@@ -523,8 +523,12 @@ async function callHybridAgent(url, key, fullUserMsg, msgId, controller) {
         return msg;
     }
 
-    const headers = { 'Content-Type': 'application/json' };
-    if (key) headers['Authorization'] = `Bearer ${key}`;
+    const headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    if (key) {
+        // Assegura string exata sem perdas
+        headers.append('Authorization', 'Bearer ' + String(key).trim());
+    }
 
     const payload = {
         message: fullUserMsg,
