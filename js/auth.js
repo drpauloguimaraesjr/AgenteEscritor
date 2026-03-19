@@ -26,6 +26,32 @@ const Auth = (() => {
         }
     });
 
+    async function loginWithGoogle() {
+        if (typeof auth === 'undefined') {
+            return { success: false, error: 'Firebase não configurado.' };
+        }
+        try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            const userCredential = await auth.signInWithPopup(provider);
+            const user = userCredential.user;
+            
+            const session = {
+                id: user.uid,
+                username: user.email.split('@')[0],
+                email: user.email,
+                name: user.displayName || user.email.split('@')[0],
+                role: 'admin',
+                loginAt: new Date().toISOString(),
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+            return { success: true, user: session, mustChangePassword: false };
+        } catch (error) {
+            console.error("Google Login Error:", error);
+            return { success: false, error: 'Falha ao autenticar com o Google. (' + error.code + ')' };
+        }
+    }
+
     async function login(email, password) {
         if (typeof auth === 'undefined') {
             return { success: false, error: 'Firebase não está configurado. Verifique os scripts no index.html.' };
@@ -97,7 +123,7 @@ const Auth = (() => {
     }
 
     return {
-        login, logout, isLoggedIn, getSession, requireAuth,
+        login, loginWithGoogle, logout, isLoggedIn, getSession, requireAuth,
         changePassword, clearMustChange,
         inviteUser, removeUser, getUsers
     };
