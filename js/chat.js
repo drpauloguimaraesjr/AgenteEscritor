@@ -274,6 +274,7 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
     let ragContext = '';
     let ragUsed = false;
     let ragDocCount = 0;
+    let ragSourcesData = [];
 
     if (rag && ipagentUrl) {
         try {
@@ -296,6 +297,12 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
                 if (ragDocCount > 0) {
                     ragUsed = true;
                     ragContext = '\n═══ CONTEXTO RAG (Base de Dados) ═══\n';
+                    
+                    ragSourcesData = [
+                        ...literature.map(text => ({ type: 'literatura', text })), 
+                        ...consults.map(text => ({ type: 'consulta', text }))
+                    ];
+
                     if (literature.length > 0) {
                         ragContext += '\n[LITERATURA CIENTÍFICA]:\n';
                         literature.forEach((a, i) => ragContext += `--- Evidência ${i+1} ---\n${a}\n\n`);
@@ -407,7 +414,7 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
             }
 
             // RAG usage log indicator
-            addRagLog(msgEl, ragUsed, ragDocCount, claudeKey ? 'Claude' : 'IPAgent');
+            addRagLog(msgEl, ragUsed, ragSourcesData);
         }
 
         // Auto-open the lousa with the generated content
@@ -636,18 +643,48 @@ function resetSendButton() {
 }
 
 // ─── RAG Usage Log ───
-function addRagLog(msgEl, ragUsed) {
+function addRagLog(msgEl, ragUsed, sources = []) {
     const logDiv = document.createElement('div');
     logDiv.className = ragUsed ? 'rag-log' : 'rag-log no-rag';
+    
     if (ragUsed) {
+        let sourcesHtml = '';
+        if (sources.length > 0) {
+            const sid = 'src_' + Math.random().toString(36).slice(2,8);
+            sourcesHtml = `
+                <button class="rag-toggle-btn" onclick="document.getElementById('${sid}').classList.toggle('open')">
+                    📊 Ver ${sources.length} fluxos de dados do RAG
+                </button>
+                <div class="rag-sources" id="${sid}">
+                    ${sources.map((s, i) => `
+                        <div class="rag-source-item">
+                            <div class="rag-source-header">
+                                <span class="rag-source-title">${s.type === 'literatura' ? 'Artigo/Evidência' : 'Histórico/Consulta'} #${i+1}</span>
+                            </div>
+                            <div class="rag-source-snippet">${formatContent(s.text.substring(0, 400))}...</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
         logDiv.innerHTML = `
-            <span class="rag-log-icon">📚</span>
-            <span>IA utilizou a base de conhecimento (RAG) para gerar esta resposta</span>
+            <div class="rag-log-main">
+                <div class="rag-title-left">
+                    <span class="rag-log-icon">📚</span>
+                    <span>IA utilizou a base de conhecimento (RAG)</span>
+                </div>
+            </div>
+            ${sourcesHtml}
         `;
     } else {
         logDiv.innerHTML = `
-            <span class="rag-log-icon">💭</span>
-            <span>Resposta gerada sem base de conhecimento (apenas modelo)</span>
+            <div class="rag-log-main">
+                <div class="rag-title-left">
+                    <span class="rag-log-icon">💭</span>
+                    <span>Resposta gerada sem base de conhecimento (apenas modelo local)</span>
+                </div>
+            </div>
         `;
     }
     const content = msgEl.querySelector('.chat-msg-content');
