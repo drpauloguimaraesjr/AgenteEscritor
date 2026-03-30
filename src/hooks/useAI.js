@@ -3,6 +3,7 @@ import { useStore } from '../store/index.js';
 import { searchKnowledge } from './useIPAgent.js';
 import { storage } from '../utils/storage.js';
 import { searchPubMed, formatCitation } from '../utils/pubmed.js';
+import { formatContent } from '../utils/format.js';
 
 // ─── Dr. Paulo system prompt ───
 const SYSTEM_PROMPT = `Você é o Assistente IA do Creative Studio do Dr. Paulo Guimarães. Você opera com DUAS bases de conhecimento:
@@ -56,6 +57,17 @@ Quando gerar, formate como:
 ## 📜 SCRIPT COMPLETO
 [gancho + seções com ### + insights 💡 + CTA 🎯]`;
 
+// ─── System prompt for selection edits ───
+const SELECTION_EDIT_PROMPT = `Você é o editor de texto do Dr. Paulo Guimarães.
+O usuário selecionou um TRECHO ESPECÍFICO do texto na lousa e quer que você o reescreva.
+
+REGRAS:
+1. Retorne APENAS o trecho reescrito — sem explicações, sem "claro!", sem contexto
+2. Mantenha o mesmo tamanho aproximado (não expanda demais)
+3. Mantenha o DNA de estilo do Dr. Paulo: provocativo, embasado, direto
+4. Se houver contexto RAG, use para enriquecer com dados
+5. Responda SOMENTE com o texto substituto, nada mais`;
+
 async function callOpenRouter(apiKey, model, systemPrompt, messages, signal, maxRetries = 3) {
   let lastError;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -104,7 +116,6 @@ async function fallbackToIPAgent(agentUrl, agentApiKey, userMsg, systemPrompt, o
     query: userMsg, platform: 'youtube', tone: 'educativo', duration: 300, use_rag: true,
   };
 
-  // Try streaming
   try {
     const resp = await fetch(`${agentUrl}/api/content/generate`, {
       method: 'POST', headers, body: JSON.stringify(payload), signal,
@@ -133,12 +144,22 @@ async function fallbackToIPAgent(agentUrl, agentApiKey, userMsg, systemPrompt, o
     if (streamErr.name === 'AbortError') throw streamErr;
   }
 
-  // Sync fallback
   const resp2 = await fetch(`${agentUrl}/api/content/generate-sync`, {
     method: 'POST', headers, body: JSON.stringify(payload),
   });
   const d = await resp2.json();
   return { response: d.content || '❌ ' + (d.error || 'Erro'), ragContext: d.rag_context || '' };
+}
+
+// ─── Detect if user message is a generation request (vs a question/briefing) ───
+function isGenerationRequest(msg) {
+  const lower = msg.toLowerCase();
+  const keywords = [
+    'crie', 'gere', 'escreva', 'roteiro', 'script', 'faça', 'produza',
+    'reescreva', 'melhore', 'refaça', 'adapte', 'transforme',
+    'gere agora', 'faça direto', 'manda', 'bora',
+  ];
+  return keywords.some(k => lower.includes(k));
 }
 
 export function useAI() {
@@ -148,9 +169,9 @@ export function useAI() {
   async function buildRagContext(query) {
     let ctx = '';
     let docCount = 0;
-    let source = null; // 'rag' | 'pubmed' | null
+    let source = null;
 
-    // ── Step A: IPAgent RAG ──
+    // Step A: IPAgent RAG
     if (store.useRag && store.agentUrl) {
       try {
         const data = await searchKnowledge(store.agentUrl, store.agentApiKey, query);
@@ -166,12 +187,10 @@ export function useAI() {
           docCount = items.length;
           source = 'rag';
         }
-      } catch {
-        // IPAgent unreachable — will try PubMed below
-      }
+      } catch {}
     }
 
-    // ── Step B: PubMed fallback — fires when RAG returns nothing ──
+    // Step B: PubMed fallback
     if (!docCount && store.useRag) {
       try {
         const refs = await searchPubMed(query, {
@@ -193,56 +212,71 @@ export function useAI() {
           docCount = refs.length;
           source = 'pubmed';
         }
-      } catch {
-        // PubMed also unavailable — proceed without context
-      }
+      } catch {}
     }
 
     return { text: ctx, docCount, source };
   }
 
+  // ─── Main send: handles both normal chat and canvas generation ───
   async function sendMessage(userMsg, tone, duration, editorContent) {
     if (store.isStreaming) return;
 
+    const selectionText = store.canvasSelection;
+    const isSelectionEdit = !!selectionText.trim();
+
     store.setStreaming(true);
+    store.setCanvasSelection(''); // clear after capturing
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // Add user message
-    store.addUserMessage(userMsg);
+    store.addUserMessage(isSelectionEdit
+      ? `[Editar seleção] ${userMsg}`
+      : userMsg
+    );
 
-    // Add placeholder assistant message
     const placeholderId = store.addAssistantMessage('').id;
 
     try {
-      // Step 1: RAG / PubMed context
+      // RAG context
       const { text: ragText, docCount, source: ragSource } = await buildRagContext(userMsg);
 
-      // Step 2: Build full prompt
+      // Build prompt
       let fullUserMsg = '';
-      if (editorContent?.trim()) fullUserMsg += `[TEXTO JÁ EXISTENTE NO EDITOR]\n${editorContent.slice(0, 2000)}\n\n`;
-      if (ragText) fullUserMsg += ragText + '\n';
 
-      // Inject Notion style references if the user added any
-      const notionStyles = store.notionStyleContext || [];
-      if (notionStyles.length > 0) {
-        fullUserMsg += '\n\n[DNA DE ESTILO — TEXTOS DE REFERÊNCIA DO AUTOR (NOTION)]\n';
-        fullUserMsg += 'Analise o tom, vocabulário, estrutura e estilo destes textos e IMITE na sua geração:\n\n';
-        notionStyles.forEach((page, i) => {
-          fullUserMsg += `--- Texto ${i + 1}: "${page.title}" ---\n${page.content}\n\n`;
-        });
+      if (isSelectionEdit) {
+        // ── Selection edit mode ──
+        fullUserMsg += `[TRECHO SELECIONADO PELO USUÁRIO PARA EDIÇÃO]\n${selectionText}\n\n`;
+        if (ragText) fullUserMsg += ragText + '\n';
+        fullUserMsg += `[INSTRUÇÃO DE EDIÇÃO]\n${userMsg}`;
+      } else {
+        // ── Normal mode ──
+        if (editorContent?.trim()) fullUserMsg += `[TEXTO JÁ EXISTENTE NO EDITOR]\n${editorContent.slice(0, 2000)}\n\n`;
+        if (ragText) fullUserMsg += ragText + '\n';
+
+        // Notion style DNA
+        const notionStyles = store.notionStyleContext || [];
+        if (notionStyles.length > 0) {
+          fullUserMsg += '\n\n[DNA DE ESTILO — TEXTOS DE REFERÊNCIA DO AUTOR (NOTION)]\n';
+          fullUserMsg += 'Analise o tom, vocabulário, estrutura e estilo destes textos e IMITE na sua geração:\n\n';
+          notionStyles.forEach((page, i) => {
+            fullUserMsg += `--- Texto ${i + 1}: "${page.title}" ---\n${page.content}\n\n`;
+          });
+        }
+
+        // PubMed manual refs
+        const pubmedRefs = store.pubmedContext || [];
+        if (pubmedRefs.length > 0) {
+          const refBlock = pubmedRefs.map((r, i) =>
+            `[${i + 1}] ${formatCitation(r)}\n    URL: ${r.url}`
+          ).join('\n');
+          fullUserMsg += `\n\n[REFERÊNCIAS PUBMED SELECIONADAS PELO USUÁRIO — use estas citações no roteiro]\n${refBlock}\n`;
+        }
+
+        fullUserMsg += `[PEDIDO DO USUÁRIO]\n${userMsg}`;
       }
 
-      // Inject PubMed references if the user added any
-      const pubmedRefs = store.pubmedContext || [];
-      if (pubmedRefs.length > 0) {
-        const refBlock = pubmedRefs.map((r, i) =>
-          `[${i + 1}] ${formatCitation(r)}\n    URL: ${r.url}`
-        ).join('\n');
-        fullUserMsg += `\n\n[REFERÊNCIAS PUBMED SELECIONADAS PELO USUÁRIO — use estas citações no roteiro]\n${refBlock}\n`;
-      }
-
-      fullUserMsg += `[PEDIDO DO USUÁRIO]\n${userMsg}`;
+      const systemPrompt = isSelectionEdit ? SELECTION_EDIT_PROMPT : SYSTEM_PROMPT;
 
       const history = store.chatHistory
         .filter(m => m.role === 'user' || m.role === 'assistant')
@@ -253,11 +287,10 @@ export function useAI() {
       let ragContextForPopup = ragText;
 
       if (store.openrouterKey) {
-        // OpenRouter / Claude
         const model = store.openrouterModel;
         try {
           fullResponse = await callOpenRouter(
-            store.openrouterKey, model, SYSTEM_PROMPT,
+            store.openrouterKey, model, systemPrompt,
             [...history, { role: 'user', content: fullUserMsg }],
             controller.signal,
           );
@@ -266,27 +299,25 @@ export function useAI() {
           if (e.name === 'AbortError') {
             fullResponse = '⏹ Geração cancelada.';
           } else if (e.message.includes('🔑') || e.message.includes('❌')) {
-            fullResponse = `⚠️ **Conexão com OpenRouter falhou!**\n\n${e.message}\n\nVerifique as Configurações e confirme se sua conta tem saldo.`;
+            fullResponse = `⚠️ **Conexão com OpenRouter falhou!**\n\n${e.message}\n\nVerifique as Configurações.`;
           } else {
-            // Fallback to IPAgent
             if (store.agentUrl) {
               const result = await fallbackToIPAgent(
-                store.agentUrl, store.agentApiKey, fullUserMsg, SYSTEM_PROMPT,
+                store.agentUrl, store.agentApiKey, fullUserMsg, systemPrompt,
                 (partial) => store.updateLastAssistantMessage(partial),
                 controller.signal,
               );
               fullResponse = result.response;
               ragContextForPopup = ragContextForPopup || result.ragContext;
             } else {
-              fullResponse = '⚠️ Configure o OpenRouter ou o IPagent local em Configurações.';
+              fullResponse = '⚠️ Configure o OpenRouter ou o IPAgent local em Configurações.';
             }
           }
           store.updateLastAssistantMessage(fullResponse);
         }
       } else if (store.agentUrl) {
-        // IPAgent only
         const result = await fallbackToIPAgent(
-          store.agentUrl, store.agentApiKey, fullUserMsg, SYSTEM_PROMPT,
+          store.agentUrl, store.agentApiKey, fullUserMsg, systemPrompt,
           (partial) => store.updateLastAssistantMessage(partial),
           controller.signal,
         );
@@ -296,6 +327,21 @@ export function useAI() {
       } else {
         fullResponse = '⚠️ Configure o OpenRouter em ⚙️ Configurações para usar o agente IA.';
         store.updateLastAssistantMessage(fullResponse);
+      }
+
+      // ── Auto-insert into canvas ──
+      const isValidResponse = fullResponse && !fullResponse.startsWith('⏹') && !fullResponse.startsWith('⚠️');
+
+      if (isValidResponse && isSelectionEdit) {
+        // Replace the selected text in the editor
+        replaceSelectionInEditor(fullResponse);
+        store.updateLastAssistantMessage('✅ Trecho atualizado na lousa.');
+        fullResponse = '✅ Trecho atualizado na lousa.';
+      } else if (isValidResponse && isGenerationRequest(userMsg)) {
+        // Auto-open canvas and insert generated content
+        autoInsertToCanvas(fullResponse);
+        store.updateLastAssistantMessage('✅ Texto gerado e inserido na lousa. Edite à vontade!');
+        // Keep the full response for RAG popup but show short message in chat
       }
 
       // Save ragContext on the message
@@ -309,7 +355,7 @@ export function useAI() {
       useStore.setState({ chatHistory: finalHistory });
 
       // Save training pair
-      if (store.openrouterKey && fullResponse && !fullResponse.startsWith('⏹') && !fullResponse.startsWith('⚠️')) {
+      if (store.openrouterKey && isValidResponse && !isSelectionEdit) {
         storage.appendTraining({ instruction: userMsg, input: ragText, output: fullResponse });
       }
 
@@ -321,6 +367,46 @@ export function useAI() {
       store.setStreaming(false);
       abortRef.current = null;
     }
+  }
+
+  // ─── Auto-insert AI response into the canvas editor ───
+  function autoInsertToCanvas(response) {
+    // Open canvas if closed
+    if (!store.editorVisible) store.openCanvas();
+
+    // Wait a tick for the editor to mount, then insert
+    setTimeout(() => {
+      const editor = document.querySelector('.editor-canvas');
+      if (!editor) return;
+      const html = formatContent(response);
+      editor.innerHTML = html;
+      // Trigger save
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+    }, 100);
+  }
+
+  // ─── Replace selected text in the editor ───
+  function replaceSelectionInEditor(newText) {
+    const editor = document.querySelector('.editor-canvas');
+    if (!editor) return;
+
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+      // There's still an active selection inside the editor — replace it
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+
+      const frag = document.createRange().createContextualFragment(
+        formatContent(newText)
+      );
+      range.insertNode(frag);
+      sel.removeAllRanges();
+    } else {
+      // Selection was lost — append at end
+      editor.innerHTML += '<br><hr><br>' + formatContent(newText);
+    }
+
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   function stopGeneration() {

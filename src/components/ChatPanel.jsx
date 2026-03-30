@@ -39,6 +39,7 @@ export default function ChatPanel({ editorRef }) {
     agentOnline, agentDocCount, editorVisible, toggleEditor,
     openSettings, openPubMed, pubmedContext, clearPubMedContext,
     openNotion, notionStyleContext, clearNotionStyles,
+    canvasSelection,
   } = useStore();
   const { sendMessage, stopGeneration } = useAI();
 
@@ -164,6 +165,16 @@ export default function ChatPanel({ editorRef }) {
 
       {/* Chat input */}
       <div className="chat-bottom">
+        {/* Selection indicator */}
+        {canvasSelection && (
+          <div className="selection-indicator">
+            <span className="selection-indicator-icon">✂</span>
+            <span className="selection-indicator-text">
+              Seleção: <em>"{canvasSelection.length > 60 ? canvasSelection.slice(0, 60) + '…' : canvasSelection}"</em>
+            </span>
+            <span className="selection-indicator-hint">Escreva como quer editar este trecho</span>
+          </div>
+        )}
         <div className="chat-input-box">
           <textarea
             ref={textareaRef}

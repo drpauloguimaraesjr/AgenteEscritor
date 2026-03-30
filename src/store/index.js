@@ -182,9 +182,12 @@ export const useStore = create((set, get) => ({
 
   setUseRag(v) { set({ useRag: v }); },
 
-  // ── Editor toggle ──
+  // ── Editor / Canvas ──
   editorVisible: false,
+  canvasSelection: '', // text currently selected in the editor
   toggleEditor() { set(s => ({ editorVisible: !s.editorVisible })); },
+  openCanvas() { set({ editorVisible: true }); },
+  setCanvasSelection(text) { set({ canvasSelection: text }); },
 
   // ── Settings panel ──
   settingsOpen: false,

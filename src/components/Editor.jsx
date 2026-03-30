@@ -1,9 +1,27 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { useStore } from '../store/index.js';
 
 export default function Editor({ editorRef, onDelete }) {
-  const { currentProject, saveProject, editorVisible, toggleEditor, platform, setPlatform, toast } = useStore();
+  const { currentProject, saveProject, editorVisible, toggleEditor, platform, setPlatform, toast, setCanvasSelection } = useStore();
   const titleRef = useRef(null);
+
+  // Track text selection in the editor
+  const handleSelectionChange = useCallback(() => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !editorRef.current) {
+      setCanvasSelection('');
+      return;
+    }
+    // Only track if selection is inside our editor
+    if (editorRef.current.contains(sel.anchorNode)) {
+      setCanvasSelection(sel.toString().trim());
+    }
+  }, [editorRef, setCanvasSelection]);
+
+  useEffect(() => {
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, [handleSelectionChange]);
 
   useEffect(() => {
     if (editorRef.current && currentProject) {
