@@ -219,6 +219,8 @@ export const useStore = create((set, get) => ({
   notionOpen: false,
   notionToken: storage.notionToken(),
   notionProxy: storage.notionProxy(),
+  notionBasePageId: storage.notionBasePageId(),
+  notionKnowledge: storage.notionKnowledgeCache(), // { title, content, fetchedAt }
   notionStyleContext: [], // [{ id, title, icon, content }]
 
   openNotion()  { set({ notionOpen: true }); },
@@ -232,6 +234,16 @@ export const useStore = create((set, get) => ({
   saveNotionProxy(p) {
     storage.saveNotionProxy(p);
     set({ notionProxy: p });
+  },
+
+  saveNotionBasePageId(id) {
+    storage.saveNotionBasePageId(id);
+    set({ notionBasePageId: id });
+  },
+
+  setNotionKnowledge(data) {
+    storage.saveNotionKnowledgeCache(data);
+    set({ notionKnowledge: data });
   },
 
   addNotionStyle(page) {

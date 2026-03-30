@@ -48,6 +48,14 @@ export const storage = {
   notionProxy: () => localStorage.getItem('cs_notion_proxy') || '',
   saveNotionProxy: (p) => localStorage.setItem('cs_notion_proxy', p),
 
+  notionBasePageId: () => localStorage.getItem('cs_notion_base_page') || '',
+  saveNotionBasePageId: (id) => localStorage.setItem('cs_notion_base_page', id),
+
+  notionKnowledgeCache: () => {
+    try { return JSON.parse(localStorage.getItem('cs_notion_kb') || 'null'); } catch { return null; }
+  },
+  saveNotionKnowledgeCache: (data) => localStorage.setItem('cs_notion_kb', JSON.stringify(data)),
+
   trainingDataset: () => {
     try { return JSON.parse(localStorage.getItem('cs_training_dataset') || '[]'); } catch { return []; }
   },

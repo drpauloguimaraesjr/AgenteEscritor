@@ -219,7 +219,7 @@ export function useAI() {
   }
 
   // ─── Main send: handles both normal chat and canvas generation ───
-  async function sendMessage(userMsg, tone, duration, editorContent) {
+  async function sendMessage(userMsg, _tone, _duration, editorContent) {
     if (store.isStreaming) return;
 
     const selectionText = store.canvasSelection;
@@ -254,7 +254,15 @@ export function useAI() {
         if (editorContent?.trim()) fullUserMsg += `[TEXTO JÁ EXISTENTE NO EDITOR]\n${editorContent.slice(0, 2000)}\n\n`;
         if (ragText) fullUserMsg += ragText + '\n';
 
-        // Notion style DNA
+        // Notion Knowledge Base (permanent writing structure)
+        const notionKb = store.notionKnowledge;
+        if (notionKb?.content) {
+          fullUserMsg += '\n\n[BASE DE CONHECIMENTO DE ESCRITA — NOTION (estrutura permanente)]\n';
+          fullUserMsg += 'Este é o padrão de escrita do autor. SEMPRE siga esta estrutura:\n\n';
+          fullUserMsg += notionKb.content + '\n\n';
+        }
+
+        // Notion style DNA (temporary per-session references)
         const notionStyles = store.notionStyleContext || [];
         if (notionStyles.length > 0) {
           fullUserMsg += '\n\n[DNA DE ESTILO — TEXTOS DE REFERÊNCIA DO AUTOR (NOTION)]\n';

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/index.js';
+import { fetchPageContent, truncateForContext } from '../utils/notion.js';
 
 const MODELS = [
   { value: 'anthropic/claude-sonnet-4-6',         label: 'Claude Sonnet 4.6 (recomendado)' },
@@ -16,19 +17,41 @@ export default function SettingsPanel({ onClose }) {
   const [url,       setUrl]       = useState(store.agentUrl);
   const [apiKey,    setApiKey]    = useState(store.agentApiKey);
   const [pubmedKey,    setPubmedKey]    = useState(store.pubmedApiKey);
-  const [notionToken,  setNotionToken]  = useState(store.notionToken);
-  const [notionProxy,  setNotionProxy]  = useState(store.notionProxy);
-  const [saved,        setSaved]        = useState(false);
-  const [testResult,   setTestResult]   = useState('');
-  const [testing,      setTesting]      = useState(false);
+  const [notionToken,     setNotionToken]     = useState(store.notionToken);
+  const [notionProxy,     setNotionProxy]     = useState(store.notionProxy);
+  const [notionBasePage,  setNotionBasePage]  = useState(store.notionBasePageId);
+  const [saved,           setSaved]           = useState(false);
+  const [testResult,      setTestResult]      = useState('');
+  const [testing,         setTesting]         = useState(false);
+  const [loadingKb,       setLoadingKb]       = useState(false);
 
   function save() {
     store.saveSettings({ openrouterKey: key, openrouterModel: model, agentUrl: url, agentApiKey: apiKey });
     store.savePubmedApiKey(pubmedKey);
     store.saveNotionToken(notionToken);
     store.saveNotionProxy(notionProxy);
+    store.saveNotionBasePageId(notionBasePage);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  async function loadKnowledgeBase() {
+    if (!notionToken || !notionBasePage) return;
+    setLoadingKb(true);
+    try {
+      const content = await fetchPageContent(notionToken, notionBasePage.trim(), { proxy: notionProxy || undefined });
+      if (!content.trim()) { store.toast('Página sem conteúdo.'); setLoadingKb(false); return; }
+      const truncated = truncateForContext(content, 6000);
+      store.setNotionKnowledge({
+        title: 'Base de Escrita',
+        content: truncated,
+        fetchedAt: new Date().toISOString(),
+      });
+      store.toast('Base de conhecimento carregada!');
+    } catch (err) {
+      store.toast('Erro: ' + err.message);
+    }
+    setLoadingKb(false);
   }
 
   async function testConnection() {
@@ -153,7 +176,7 @@ export default function SettingsPanel({ onClose }) {
             </div>
           </Section>
 
-          <Section title="Notion (Referência de Estilo)">
+          <Section title="Notion">
             <Field label="Token da Integração Interna">
               <input
                 type="password"
@@ -169,10 +192,35 @@ export default function SettingsPanel({ onClose }) {
                 placeholder="https://corsproxy.io/? (deixe vazio para padrão)"
               />
             </Field>
+            <Field label="Página base de escrita (ID da página com sua estrutura de texto)">
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  value={notionBasePage}
+                  onChange={e => setNotionBasePage(e.target.value)}
+                  placeholder="Cole o ID da página (32 caracteres) ou a URL completa"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  className="btn-ghost"
+                  style={{ flexShrink: 0, fontSize: 11, padding: '6px 12px' }}
+                  onClick={loadKnowledgeBase}
+                  disabled={loadingKb || !notionToken || !notionBasePage}
+                >
+                  {loadingKb ? '⏳…' : '↻ Carregar'}
+                </button>
+              </div>
+            </Field>
+            {store.notionKnowledge && (
+              <div style={{ fontSize: 11, color: 'var(--green)', padding: '6px 10px', background: 'var(--green-dim)', borderRadius: 6 }}>
+                ✓ Base carregada ({store.notionKnowledge.content.length.toLocaleString()} chars) —
+                {' '}{new Date(store.notionKnowledge.fetchedAt).toLocaleDateString('pt-BR')}
+              </div>
+            )}
             <div style={{ fontSize: 11, color: 'var(--text-3)', lineHeight: 1.5 }}>
               1. Crie uma integração em <strong>notion.so/my-integrations</strong><br/>
               2. Copie o token (ntn_…) e cole acima<br/>
-              3. No Notion, compartilhe suas páginas com a integração
+              3. No Notion, compartilhe suas páginas com a integração<br/>
+              4. Cole o ID da página que contém sua <strong>estrutura de escrita</strong> — ela será usada como base em todas as gerações
             </div>
           </Section>
 

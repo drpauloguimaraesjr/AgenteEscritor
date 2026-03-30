@@ -41,7 +41,7 @@ export default function App() {
       <ReasoningModal />
       {settingsOpen && <SettingsPanel onClose={closeSettings} />}
       {pubmedOpen && <PubMedModal editorRef={editorRef} />}
-      {notionOpen && <NotionModal />}
+      {notionOpen && <NotionModal editorRef={editorRef} />}
       <Toast />
 
       {!agentOnline && (

@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { useStore } from '../store/index.js';
 import { searchNotionPages, fetchPageContent, truncateForContext } from '../utils/notion.js';
+import { formatContent } from '../utils/format.js';
 
-export default function NotionModal() {
-  const { closeNotion, notionToken, addNotionStyle, toast } = useStore();
+export default function NotionModal({ editorRef }) {
+  const { closeNotion, notionToken, addNotionStyle, openCanvas, editorVisible, toast } = useStore();
 
   const [query,    setQuery]    = useState('');
   const [results,  setResults]  = useState([]);
   const [loading,  setLoading]  = useState(false);
-  const [fetching, setFetching] = useState(null); // pageId being fetched
+  const [fetching, setFetching] = useState(null);
   const [error,    setError]    = useState('');
   const [added,    setAdded]    = useState(new Set());
 
   async function handleSearch(e) {
     e.preventDefault();
-    if (!notionToken) { setError('Configure o token do Notion em ⚙ Configurações.'); return; }
+    if (!notionToken) { setError('Configure o token do Notion em Configurações.'); return; }
     setLoading(true);
     setError('');
     setResults([]);
@@ -46,6 +47,32 @@ export default function NotionModal() {
     }
   }
 
+  async function handleInsertCanvas(page) {
+    setFetching(page.id);
+    try {
+      const content = await fetchPageContent(notionToken, page.id);
+      if (!content.trim()) { toast('Página sem conteúdo.'); return; }
+
+      // Open canvas if closed
+      if (!editorVisible) openCanvas();
+
+      setTimeout(() => {
+        const editor = editorRef?.current || document.querySelector('.editor-canvas');
+        if (!editor) { toast('Abra a lousa primeiro.'); return; }
+        const html = formatContent(content);
+        editor.innerHTML = (editor.innerHTML && editor.innerText.trim())
+          ? editor.innerHTML + '<br><hr><br>' + html
+          : html;
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
+        toast(`"${page.title}" inserido na lousa!`);
+      }, 150);
+    } catch (err) {
+      toast('Erro: ' + err.message);
+    } finally {
+      setFetching(null);
+    }
+  }
+
   function formatDate(iso) {
     if (!iso) return '';
     try { return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }); }
@@ -54,13 +81,13 @@ export default function NotionModal() {
 
   return (
     <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) closeNotion(); }}>
-      <div className="notion-modal">
+      <div className="notion-modal glass">
         {/* Header */}
         <div className="notion-header">
           <span className="notion-logo">📓</span>
           <div>
-            <div className="notion-modal-title">Notion — Referências de Estilo</div>
-            <div className="notion-sub">Selecione textos do seu Notion para a IA imitar o tom e estrutura</div>
+            <div className="notion-modal-title">Notion</div>
+            <div className="notion-sub">Busque textos para usar como estilo ou inserir na lousa</div>
           </div>
           <button className="pubmed-close" onClick={closeNotion}>✕</button>
         </div>
@@ -68,7 +95,7 @@ export default function NotionModal() {
         {/* Token warning */}
         {!notionToken && (
           <div className="notion-warning">
-            ⚠ Token não configurado. Vá em <strong>⚙ Configurações → Notion</strong> e cole seu token de integração.
+            Token não configurado. Vá em <strong>Configurações → Notion</strong> e cole seu token.
           </div>
         )}
 
@@ -78,7 +105,7 @@ export default function NotionModal() {
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Buscar páginas no Notion… (vazio = listar todas)"
+            placeholder="Buscar páginas… (vazio = listar todas)"
             disabled={!notionToken}
           />
           <button type="submit" disabled={loading || !notionToken}>
@@ -86,14 +113,12 @@ export default function NotionModal() {
           </button>
         </form>
 
-        {/* Error */}
         {error && <div className="pubmed-error">{error}</div>}
 
-        {/* Loading */}
         {loading && (
           <div className="pubmed-loading">
             <div className="thinking-dots"><span/><span/><span/></div>
-            <span>Buscando páginas no Notion…</span>
+            <span>Buscando no Notion…</span>
           </div>
         )}
 
@@ -112,28 +137,29 @@ export default function NotionModal() {
                   </div>
                 </div>
               </div>
-              <div className="pubmed-actions" style={{ justifyContent: 'flex-end' }}>
+              <div className="pubmed-actions">
+                <button
+                  className="btn-ghost pubmed-btn"
+                  onClick={() => handleInsertCanvas(page)}
+                  disabled={fetching === page.id}
+                >
+                  {fetching === page.id ? '⏳…' : '📝 Inserir na Lousa'}
+                </button>
                 <button
                   className={`btn-ghost pubmed-btn ${added.has(page.id) ? 'pubmed-btn-added' : ''}`}
                   onClick={() => handleAddStyle(page)}
                   disabled={added.has(page.id) || fetching === page.id}
                 >
-                  {fetching === page.id
-                    ? '⏳ Carregando…'
-                    : added.has(page.id)
-                      ? '✓ Adicionado'
-                      : '🎨 Usar como estilo'}
+                  {added.has(page.id) ? '✓ Estilo' : '🎨 Usar como estilo'}
                 </button>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Hint */}
         {added.size > 0 && (
           <div className="pubmed-ctx-hint">
-            <strong>{added.size}</strong> {added.size === 1 ? 'texto selecionado' : 'textos selecionados'} como referência —
-            a IA vai imitar o tom e a estrutura desses textos nas próximas gerações.
+            <strong>{added.size}</strong> {added.size === 1 ? 'texto' : 'textos'} como referência de estilo
           </div>
         )}
       </div>
