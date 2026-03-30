@@ -1,93 +1,85 @@
 // ─── Notion API Client ───
-// Uses CORS proxy since Notion API doesn't allow browser-origin requests.
-// User must create an Internal Integration at https://www.notion.so/my-integrations
-// and share desired pages with the integration.
+// Uses Vercel serverless proxy at /api/notion to bypass CORS.
+// Fallback to direct CORS proxies if Vercel proxy unavailable (local dev).
 
-const NOTION_API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
 
-// Multiple proxy fallbacks — corsproxy.io can be unreliable
-const PROXY_LIST = [
-  'https://corsproxy.io/?',
-  'https://api.allorigins.win/raw?url=',
-  'https://cors-anywhere.herokuapp.com/',
-];
+/**
+ * Call Notion API through our Vercel proxy.
+ * Falls back to direct fetch with CORS proxy if proxy unavailable.
+ */
+async function notionFetch(endpoint, token, { method = 'GET', body, proxy } = {}) {
+  // Try Vercel proxy first (works in production)
+  try {
+    const resp = await fetch('/api/notion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint, method, body, token }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (resp.ok || resp.status === 401 || resp.status === 404) {
+      return resp;
+    }
+  } catch {
+    // Proxy unavailable (local dev) — try CORS fallback
+  }
 
-function headers(token) {
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Notion-Version': NOTION_VERSION,
-    'Content-Type': 'application/json',
+  // Fallback: direct with CORS proxy
+  const corsProxy = proxy || 'https://corsproxy.io/?';
+  const url = `https://api.notion.com/v1${endpoint}`;
+  const fetchOpts = {
+    method,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Notion-Version': NOTION_VERSION,
+      'Content-Type': 'application/json',
+    },
+    signal: AbortSignal.timeout(12000),
   };
+  if (body && method !== 'GET') fetchOpts.body = JSON.stringify(body);
+
+  return fetch(corsProxy + encodeURIComponent(url), fetchOpts);
 }
 
 /**
  * Extract a Notion page ID from a URL or raw ID string.
- * Accepts:
- *   - Full URL: https://www.notion.so/My-Page-ffbedecaeb2d459b8bc03f56e0...
- *   - Raw 32-char hex: ffbedecaeb2d459b8bc03f56e012345
- *   - UUID format: ffbedeca-eb2d-459b-8bc0-3f56e012345
  */
 export function extractPageId(input) {
   if (!input) return '';
   const trimmed = input.trim();
 
-  // Try to extract 32-char hex from URL (last segment after -)
+  // Full URL: extract 32-char hex
   const urlMatch = trimmed.match(/([a-f0-9]{32})(?:\?|$)/i);
   if (urlMatch) return urlMatch[1];
 
-  // Try UUID format (remove dashes)
+  // UUID format
   const uuidMatch = trimmed.match(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i);
   if (uuidMatch) return trimmed.replace(/-/g, '');
 
-  // Already a raw 32-char hex?
+  // Raw 32-char hex
   if (/^[a-f0-9]{32}$/i.test(trimmed)) return trimmed;
 
-  // Last resort: try to find 32 hex chars anywhere in the string
+  // Last resort
   const anyMatch = trimmed.match(/[a-f0-9]{32}/i);
   if (anyMatch) return anyMatch[0];
 
-  return trimmed; // return as-is, let the API fail with a clear error
-}
-
-/**
- * Fetch with proxy fallback — tries multiple proxies if the first fails.
- */
-async function fetchWithProxy(url, options, customProxy) {
-  if (customProxy) {
-    const resp = await fetch(customProxy + encodeURIComponent(url), options);
-    return resp;
-  }
-
-  let lastError;
-  for (const proxy of PROXY_LIST) {
-    try {
-      const resp = await fetch(proxy + encodeURIComponent(url), {
-        ...options,
-        signal: AbortSignal.timeout(12000),
-      });
-      if (resp.ok || resp.status === 401 || resp.status === 404) return resp;
-    } catch (err) {
-      lastError = err;
-    }
-  }
-  throw lastError || new Error('Todos os proxies CORS falharam');
+  return trimmed;
 }
 
 /**
  * Search Notion pages accessible by the integration.
  */
 export async function searchNotionPages(token, query = '', { proxy } = {}) {
-  const resp = await fetchWithProxy(`${NOTION_API}/search`, {
+  const resp = await notionFetch('/search', token, {
     method: 'POST',
-    headers: headers(token),
-    body: JSON.stringify({
+    body: {
       query,
       filter: { value: 'page', property: 'object' },
       page_size: 20,
       sort: { direction: 'descending', timestamp: 'last_edited_time' },
-    }),
-  }, proxy);
+    },
+    proxy,
+  });
 
   if (!resp.ok) {
     if (resp.status === 401) throw new Error('Token Notion inválido ou expirado.');
@@ -121,10 +113,8 @@ export async function fetchPageContent(token, pageIdOrUrl, { proxy } = {}) {
   let safety = 0;
 
   while (safety++ < 5) {
-    const url = `${NOTION_API}/blocks/${pageId}/children?page_size=100${cursor ? `&start_cursor=${cursor}` : ''}`;
-    const resp = await fetchWithProxy(url, {
-      headers: headers(token),
-    }, proxy);
+    const endpoint = `/blocks/${pageId}/children?page_size=100${cursor ? `&start_cursor=${cursor}` : ''}`;
+    const resp = await notionFetch(endpoint, token, { method: 'GET', proxy });
 
     if (!resp.ok) throw new Error(`Notion blocks: HTTP ${resp.status}`);
     const data = await resp.json();
@@ -161,7 +151,6 @@ function blocksToText(blocks) {
     }
 
     if (type === 'divider') return '---';
-
     return '';
   }).filter(Boolean).join('\n');
 }
