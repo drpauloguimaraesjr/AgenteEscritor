@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/index.js';
-import { fetchPageContent, truncateForContext } from '../utils/notion.js';
+import { fetchPageContent, truncateForContext, searchNotionPages } from '../utils/notion.js';
 
 const MODELS = [
   { value: 'anthropic/claude-sonnet-4-6',         label: 'Claude Sonnet 4.6 (recomendado)' },
@@ -86,31 +86,13 @@ export default function SettingsPanel({ onClose }) {
       results.push('❌ PubMed inacessível');
     }
 
-    // Test Notion (only if token set)
+    // Test Notion (uses same proxy fallback as the real API calls)
     if (notionToken) {
       try {
-        const proxy = notionProxy || 'https://corsproxy.io/?';
-        const r = await fetch(proxy + encodeURIComponent('https://api.notion.com/v1/search'), {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${notionToken}`,
-            'Notion-Version': '2022-06-28',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ page_size: 1 }),
-          signal: AbortSignal.timeout(8000),
-        });
-        if (r.ok) {
-          const d = await r.json();
-          const count = d.results?.length || 0;
-          results.push(`✅ Notion: token válido (${count > 0 ? 'páginas encontradas' : 'nenhuma página compartilhada'})`);
-        } else if (r.status === 401) {
-          results.push('❌ Notion: token inválido');
-        } else {
-          results.push(`⚠️ Notion: resposta HTTP ${r.status}`);
-        }
-      } catch {
-        results.push('❌ Notion: inacessível (verifique proxy CORS)');
+        const pages = await searchNotionPages(notionToken, '', { proxy: notionProxy || undefined });
+        results.push(`✅ Notion: token válido (${pages.length} ${pages.length === 1 ? 'página' : 'páginas'} encontradas)`);
+      } catch (err) {
+        results.push(`❌ Notion: ${err.message}`);
       }
     } else {
       results.push('ℹ️ Notion: token não configurado');

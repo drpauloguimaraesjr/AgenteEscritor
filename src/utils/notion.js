@@ -4,12 +4,14 @@
 // and share desired pages with the integration.
 
 const NOTION_API = 'https://api.notion.com/v1';
-const DEFAULT_PROXY = 'https://corsproxy.io/?';
 const NOTION_VERSION = '2022-06-28';
 
-function proxyUrl(url, proxy) {
-  return (proxy || DEFAULT_PROXY) + encodeURIComponent(url);
-}
+// Multiple proxy fallbacks — corsproxy.io can be unreliable
+const PROXY_LIST = [
+  'https://corsproxy.io/?',
+  'https://api.allorigins.win/raw?url=',
+  'https://cors-anywhere.herokuapp.com/',
+];
 
 function headers(token) {
   return {
@@ -20,14 +22,63 @@ function headers(token) {
 }
 
 /**
+ * Extract a Notion page ID from a URL or raw ID string.
+ * Accepts:
+ *   - Full URL: https://www.notion.so/My-Page-ffbedecaeb2d459b8bc03f56e0...
+ *   - Raw 32-char hex: ffbedecaeb2d459b8bc03f56e012345
+ *   - UUID format: ffbedeca-eb2d-459b-8bc0-3f56e012345
+ */
+export function extractPageId(input) {
+  if (!input) return '';
+  const trimmed = input.trim();
+
+  // Try to extract 32-char hex from URL (last segment after -)
+  const urlMatch = trimmed.match(/([a-f0-9]{32})(?:\?|$)/i);
+  if (urlMatch) return urlMatch[1];
+
+  // Try UUID format (remove dashes)
+  const uuidMatch = trimmed.match(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i);
+  if (uuidMatch) return trimmed.replace(/-/g, '');
+
+  // Already a raw 32-char hex?
+  if (/^[a-f0-9]{32}$/i.test(trimmed)) return trimmed;
+
+  // Last resort: try to find 32 hex chars anywhere in the string
+  const anyMatch = trimmed.match(/[a-f0-9]{32}/i);
+  if (anyMatch) return anyMatch[0];
+
+  return trimmed; // return as-is, let the API fail with a clear error
+}
+
+/**
+ * Fetch with proxy fallback — tries multiple proxies if the first fails.
+ */
+async function fetchWithProxy(url, options, customProxy) {
+  if (customProxy) {
+    const resp = await fetch(customProxy + encodeURIComponent(url), options);
+    return resp;
+  }
+
+  let lastError;
+  for (const proxy of PROXY_LIST) {
+    try {
+      const resp = await fetch(proxy + encodeURIComponent(url), {
+        ...options,
+        signal: AbortSignal.timeout(12000),
+      });
+      if (resp.ok || resp.status === 401 || resp.status === 404) return resp;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error('Todos os proxies CORS falharam');
+}
+
+/**
  * Search Notion pages accessible by the integration.
- * @param {string} token - Internal Integration token
- * @param {string} query - search text (empty = list all)
- * @param {{ proxy?: string }} opts
- * @returns {Promise<NotionPage[]>}
  */
 export async function searchNotionPages(token, query = '', { proxy } = {}) {
-  const resp = await fetch(proxyUrl(`${NOTION_API}/search`, proxy), {
+  const resp = await fetchWithProxy(`${NOTION_API}/search`, {
     method: 'POST',
     headers: headers(token),
     body: JSON.stringify({
@@ -36,8 +87,7 @@ export async function searchNotionPages(token, query = '', { proxy } = {}) {
       page_size: 20,
       sort: { direction: 'descending', timestamp: 'last_edited_time' },
     }),
-    signal: AbortSignal.timeout(10000),
-  });
+  }, proxy);
 
   if (!resp.ok) {
     if (resp.status === 401) throw new Error('Token Notion inválido ou expirado.');
@@ -63,23 +113,18 @@ export async function searchNotionPages(token, query = '', { proxy } = {}) {
 
 /**
  * Fetch the text content of a Notion page (all blocks).
- * @param {string} token
- * @param {string} pageId
- * @param {{ proxy?: string }} opts
- * @returns {Promise<string>} plain text content
  */
-export async function fetchPageContent(token, pageId, { proxy } = {}) {
+export async function fetchPageContent(token, pageIdOrUrl, { proxy } = {}) {
+  const pageId = extractPageId(pageIdOrUrl);
   const blocks = [];
   let cursor = undefined;
   let safety = 0;
 
-  // Paginate through all blocks (max 5 pages = ~500 blocks)
   while (safety++ < 5) {
     const url = `${NOTION_API}/blocks/${pageId}/children?page_size=100${cursor ? `&start_cursor=${cursor}` : ''}`;
-    const resp = await fetch(proxyUrl(url, proxy), {
+    const resp = await fetchWithProxy(url, {
       headers: headers(token),
-      signal: AbortSignal.timeout(10000),
-    });
+    }, proxy);
 
     if (!resp.ok) throw new Error(`Notion blocks: HTTP ${resp.status}`);
     const data = await resp.json();
@@ -99,7 +144,6 @@ function blocksToText(blocks) {
     const data = block[type];
     if (!data) return '';
 
-    // Rich text blocks
     const richText = data.rich_text || data.text;
     if (richText) {
       const text = richText.map(t => t.plain_text).join('');
@@ -116,7 +160,6 @@ function blocksToText(blocks) {
       }
     }
 
-    // Divider
     if (type === 'divider') return '---';
 
     return '';
