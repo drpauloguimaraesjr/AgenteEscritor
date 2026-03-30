@@ -8,6 +8,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const DEFAULT_MODEL = process.env.ESCRITOR_MODEL_ID || 'anthropic/claude-sonnet-4-20250514';
 
 app.post('/api/chat', async (req, res) => {
     try {
@@ -28,7 +29,7 @@ app.post('/api/chat', async (req, res) => {
                 'X-Title': 'Creative Studio'
             },
             body: JSON.stringify({
-                model: model || "anthropic/claude-sonnet-4-20250514",
+                model: model || DEFAULT_MODEL,
                 max_tokens: 4096,
                 messages: fullMessages
             })
@@ -47,6 +48,11 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-app.get('/', (req, res) => res.send('API do Agente Escritor rodando perfeitamente na Railway!'));
+app.get('/', (req, res) => res.json({
+    service: 'Agente Escritor',
+    status: 'online',
+    model: DEFAULT_MODEL,
+    provider: 'openrouter'
+}));
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
