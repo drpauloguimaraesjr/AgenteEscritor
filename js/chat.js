@@ -438,7 +438,7 @@ Se o usuário colar um texto pronto, pergunte o que quer (adaptar tom, resumir, 
 // ── API Railway com retry (evita queda de conexão) ──
 async function callClaudeWithRetry(apiKey, model, system, messages, signal, maxRetries = 3) {
     let lastError;
-    const RAILWAY_URL = 'https://agente-backend-production.up.railway.app'; // URL provisória da sua API
+    const RAILWAY_URL = 'https://escritor.ipagent.app'; // Tunnel fixo via Cloudflare
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
