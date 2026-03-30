@@ -404,9 +404,14 @@ a { text-decoration: none; color: inherit; }
    ═══════════════════════════════════════════ */
 .editor-shell {
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
-  border-right: 1px solid var(--border);
-  animation: fadeIn 0.5s var(--ease);
+  border-left: 1px solid var(--border);
+  animation: canvasSlideIn 0.4s var(--ease);
   transition: flex var(--speed-slow) var(--ease), width var(--speed-slow) var(--ease);
+}
+
+@keyframes canvasSlideIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .editor-empty {
@@ -509,13 +514,49 @@ a { text-decoration: none; color: inherit; }
    AI CHAT PANEL
    ═══════════════════════════════════════════ */
 .ai-panel {
-  width: 380px; flex-shrink: 0; height: 100%;
+  flex: 1; min-width: 320px; height: 100%;
   display: flex; flex-direction: column;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  border-left: 1px solid var(--glass-border);
-  animation: slideInRight 0.4s var(--ease);
+  border-right: 1px solid var(--glass-border);
+  animation: fadeIn 0.4s var(--ease);
+  transition: flex var(--speed-slow) var(--ease), min-width var(--speed-slow) var(--ease), max-width var(--speed-slow) var(--ease);
+}
+
+/* When canvas is open, chat shrinks */
+.ai-panel.canvas-open {
+  flex: 0 0 340px;
+  min-width: 340px;
+  max-width: 340px;
+}
+
+/* Center content when chat is full-width */
+.ai-panel:not(.canvas-open) .chat-messages,
+.ai-panel:not(.canvas-open) .chat-bottom,
+.ai-panel:not(.canvas-open) .chat-output-bar {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.ai-panel:not(.canvas-open) .chat-welcome {
+  padding-top: 80px;
+}
+
+.ai-panel:not(.canvas-open) .chat-welcome-icon {
+  font-size: 56px; margin-bottom: 12px;
+  filter: drop-shadow(0 0 16px rgba(124,111,240,0.4));
+}
+
+.ai-panel:not(.canvas-open) .chat-welcome-title {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 700;
+  background: linear-gradient(135deg, var(--text-1), rgba(124,111,240,0.7));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
 }
 
 .ai-panel-header {
@@ -983,6 +1024,115 @@ a { text-decoration: none; color: inherit; }
 .notion-card-header { display: flex; align-items: flex-start; gap: 10px; }
 .notion-card-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
 .notion-card-info { flex: 1; min-width: 0; }
+
+/* ═══════════════════════════════════════════
+   CANVAS HEADER (Editor top bar)
+   ═══════════════════════════════════════════ */
+.canvas-header {
+  height: 48px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.canvas-header-title {
+  font-size: 14px; font-weight: 700; color: var(--text-1);
+  flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.canvas-header-actions {
+  display: flex; gap: 3px; align-items: center;
+}
+.canvas-header-actions button {
+  padding: 5px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-2); font-size: 11px; font-weight: 600;
+  cursor: pointer;
+  transition: all var(--speed) var(--ease);
+}
+.canvas-header-actions button:hover {
+  background: var(--bg-hover); color: var(--text-1);
+  border-color: var(--border-hover);
+}
+.canvas-close-btn {
+  color: var(--text-3) !important;
+  font-size: 14px !important;
+  padding: 5px 8px !important;
+}
+.canvas-close-btn:hover { color: var(--red) !important; }
+
+/* ═══════════════════════════════════════════
+   CANVAS TOOLBAR (right edge)
+   ═══════════════════════════════════════════ */
+.canvas-toolbar {
+  width: 48px; flex-shrink: 0; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 14px 0;
+  gap: 4px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-left: 1px solid var(--glass-border);
+  animation: slideInRight 0.3s var(--ease);
+}
+.canvas-toolbar-btn {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all var(--speed) var(--ease);
+}
+.canvas-toolbar-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border);
+  color: var(--text-1);
+}
+.canvas-toolbar-close:hover { color: var(--red); }
+.canvas-toolbar-divider {
+  width: 24px; height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* ═══════════════════════════════════════════
+   CANVAS TOGGLE BUTTON (in chat bar)
+   ═══════════════════════════════════════════ */
+.btn-canvas-toggle {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 11px; font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all var(--speed) var(--ease);
+}
+.btn-canvas-toggle:hover {
+  background: var(--bg-hover); color: var(--text-1);
+  border-color: var(--border-hover);
+}
+.btn-canvas-toggle.active {
+  background: var(--violet-dim);
+  border-color: rgba(124,111,240,0.3);
+  color: var(--violet);
+}
+
+/* ═══════════════════════════════════════════
+   CHAT WELCOME (full-width state)
+   ═══════════════════════════════════════════ */
+.chat-welcome { text-align: center; padding: 24px 18px 12px; }
+.chat-welcome-icon { font-size: 36px; margin-bottom: 8px; }
+.chat-welcome-title {
+  font-size: 18px; font-weight: 600; color: var(--text-1); margin-bottom: 6px;
+}
+.chat-welcome p { font-size: 13px; color: var(--text-3); margin-bottom: 16px; }
 
 /* ═══════════════════════════════════════════
    TOAST

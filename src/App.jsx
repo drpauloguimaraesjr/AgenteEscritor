@@ -5,6 +5,7 @@ import Login          from './components/Login.jsx';
 import Sidebar        from './components/Sidebar.jsx';
 import Editor         from './components/Editor.jsx';
 import ChatPanel      from './components/ChatPanel.jsx';
+import CanvasToolbar  from './components/CanvasToolbar.jsx';
 import DeleteModal    from './components/DeleteModal.jsx';
 import ReasoningModal from './components/ReasoningModal.jsx';
 import SettingsPanel  from './components/SettingsPanel.jsx';
@@ -15,6 +16,7 @@ import Toast          from './components/Toast.jsx';
 export default function App() {
   const session         = useStore(s => s.session);
   const agentOnline     = useStore(s => s.agentOnline);
+  const editorVisible   = useStore(s => s.editorVisible);
   const openDeleteModal = useStore(s => s.openDeleteModal);
   const settingsOpen    = useStore(s => s.settingsOpen);
   const openSettings    = useStore(s => s.openSettings);
@@ -24,7 +26,6 @@ export default function App() {
 
   const editorRef = useRef(null);
 
-  // Poll IPAgent health every 15s
   useIPAgentHealth();
 
   if (!session) return <Login />;
@@ -32,8 +33,9 @@ export default function App() {
   return (
     <div className="app-root">
       <Sidebar onSettingsClick={openSettings} />
-      <Editor editorRef={editorRef} onDelete={openDeleteModal} />
       <ChatPanel editorRef={editorRef} />
+      <Editor editorRef={editorRef} onDelete={openDeleteModal} />
+      {editorVisible && <CanvasToolbar editorRef={editorRef} />}
 
       <DeleteModal />
       <ReasoningModal />

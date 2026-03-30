@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import { useStore } from '../store/index.js';
 
 export default function Editor({ editorRef, onDelete }) {
-  const { currentProject, saveProject, editorVisible, platform, setPlatform } = useStore();
+  const { currentProject, saveProject, editorVisible, toggleEditor, platform, setPlatform, toast } = useStore();
   const titleRef = useRef(null);
 
   useEffect(() => {
@@ -28,9 +28,27 @@ export default function Editor({ editorRef, onDelete }) {
     editorRef.current?.focus();
   }
 
+  function handleCopy() {
+    const text = editorRef.current?.innerText || '';
+    if (!text.trim()) return;
+    navigator.clipboard.writeText(text).then(() => toast('Texto copiado!'));
+  }
+
+  function handleDownload() {
+    const text = editorRef.current?.innerText || '';
+    if (!text.trim()) return;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (currentProject?.title || 'roteiro') + '.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (!currentProject) {
     return (
-      <div className={`editor-shell glass-panel ${!editorVisible ? 'editor-hidden' : ''}`}>
+      <div className={`editor-shell ${!editorVisible ? 'editor-hidden' : ''}`}>
         <div className="editor-empty">
           <div className="editor-empty-icon">✍️</div>
           <h2>Selecione ou crie um documento</h2>
@@ -41,7 +59,21 @@ export default function Editor({ editorRef, onDelete }) {
   }
 
   return (
-    <div className={`editor-shell glass-panel ${!editorVisible ? 'editor-hidden' : ''}`}>
+    <div className={`editor-shell ${!editorVisible ? 'editor-hidden' : ''}`}>
+      {/* Canvas header — Copiar | Editar | Baixar | Fechar */}
+      <div className="canvas-header">
+        <span className="canvas-header-title">
+          {currentProject.title || 'Sem título'}
+        </span>
+        <div className="canvas-header-actions">
+          <button onClick={handleCopy}>Copiar</button>
+          <button onClick={() => editorRef.current?.focus()}>Editar</button>
+          <button onClick={handleDownload}>Baixar</button>
+          <button className="canvas-close-btn" onClick={toggleEditor} title="Fechar lousa">✕</button>
+        </div>
+      </div>
+
+      {/* Platform + title bar */}
       <div className="editor-topbar">
         <div className="platform-pills">
           {['youtube', 'instagram', 'blog'].map(p => (
@@ -64,6 +96,7 @@ export default function Editor({ editorRef, onDelete }) {
         </div>
       </div>
 
+      {/* Editor canvas */}
       <div className="editor-pane">
         <div
           ref={editorRef}
@@ -75,6 +108,7 @@ export default function Editor({ editorRef, onDelete }) {
         />
       </div>
 
+      {/* Formatting toolbar */}
       <div className="editor-toolbar">
         <button className="toolbar-btn" onClick={() => execCmd('bold')} title="Negrito"><b>B</b></button>
         <button className="toolbar-btn" onClick={() => execCmd('italic')} title="Itálico"><i>I</i></button>

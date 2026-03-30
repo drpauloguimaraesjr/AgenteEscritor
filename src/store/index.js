@@ -183,7 +183,7 @@ export const useStore = create((set, get) => ({
   setUseRag(v) { set({ useRag: v }); },
 
   // ── Editor toggle ──
-  editorVisible: true,
+  editorVisible: false,
   toggleEditor() { set(s => ({ editorVisible: !s.editorVisible })); },
 
   // ── Settings panel ──
