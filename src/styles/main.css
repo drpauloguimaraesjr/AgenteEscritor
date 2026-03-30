@@ -699,6 +699,17 @@ a { text-decoration: none; color: inherit; }
 }
 .rag-view-btn:hover { background: rgba(255,255,255,0.2); }
 
+/* RAG toggle mini */
+.rag-toggle-mini {
+  cursor: pointer; display: flex; align-items: center;
+}
+.rag-toggle-mini input { display: none; }
+.rag-toggle-label {
+  font-size: 16px; opacity: 0.5;
+  transition: opacity var(--speed);
+}
+.rag-toggle-mini input:checked + .rag-toggle-label { opacity: 1; }
+
 /* Selection indicator */
 .selection-indicator {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;

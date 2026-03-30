@@ -5,32 +5,8 @@ import { useAI } from '../hooks/useAI.js';
 import { formatContent } from '../utils/format.js';
 import ChatMessage from './ChatMessage.jsx';
 
-const SUGGESTIONS = [
-  'Crie um roteiro de 5 min sobre tirzepatida',
-  'Script Reels: testosterona baixa no homem',
-  'Roteiro: mitos sobre hormônio feminino',
-];
-
-const TONES = [
-  { value: 'educativo',    label: 'Educativo' },
-  { value: 'storytelling', label: 'Storytelling' },
-  { value: 'provocativo',  label: 'Provocativo' },
-  { value: 'motivacional', label: 'Motivacional' },
-  { value: 'mito_verdade', label: 'Mito vs Verdade' },
-  { value: 'lista',        label: 'Lista / Tópicos' },
-];
-
-const DURATIONS = [
-  { value: 60,  label: '60s' },
-  { value: 180, label: '3 min' },
-  { value: 300, label: '5 min' },
-  { value: 600, label: '10 min' },
-];
-
 export default function ChatPanel({ editorRef }) {
-  const [text,     setText]     = useState('');
-  const [tone,     setTone]     = useState('educativo');
-  const [duration, setDuration] = useState(300);
+  const [text, setText] = useState('');
   const messagesRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -43,7 +19,6 @@ export default function ChatPanel({ editorRef }) {
   } = useStore();
   const { sendMessage, stopGeneration } = useAI();
 
-  // Auto-scroll
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
@@ -61,22 +36,16 @@ export default function ChatPanel({ editorRef }) {
     setText('');
     if (textareaRef.current) { textareaRef.current.style.height = 'auto'; }
     const editorContent = editorRef?.current?.innerText || '';
-    await sendMessage(msg, tone, duration, editorContent);
+    await sendMessage(msg, null, null, editorContent);
   }
 
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   }
 
-  function sendSuggestion(s) {
-    setText(s);
-    setTimeout(() => { textareaRef.current?.focus(); }, 0);
-  }
-
   function insertLastMsg() {
     const lastAi = [...chatHistory].reverse().find(m => m.role === 'assistant' && m.content);
     if (!lastAi || !editorRef?.current) return;
-    // Auto-open canvas if closed
     if (!editorVisible) toggleEditor();
     editorRef.current.innerHTML += (editorRef.current.innerHTML ? '<br><hr><br>' : '') + formatContent(lastAi.content);
   }
@@ -90,7 +59,7 @@ export default function ChatPanel({ editorRef }) {
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <span className="ai-panel-title">Agente IA</span>
+        <span className="ai-panel-title">Creative Studio</span>
         <div className="ai-panel-status">
           {agentOnline && agentDocCount > 0 && (
             <span className="status-badge status-online">RAG · {agentDocCount.toLocaleString('pt-BR')}</span>
@@ -102,28 +71,13 @@ export default function ChatPanel({ editorRef }) {
         </div>
       </div>
 
-      {/* KB badge */}
-      <div className="ai-kb-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
-        </svg>
-        <span>Base de conhecimento:</span>
-        <strong>{agentDocCount > 0 ? agentDocCount.toLocaleString('pt-BR') + ' docs' : '—'}</strong>
-      </div>
-
       {/* Messages */}
       <div className="chat-messages" ref={messagesRef}>
         {chatHistory.length === 0 && (
           <div className="chat-welcome">
             <div className="chat-welcome-icon">✍️</div>
             <h2 className="chat-welcome-title">Como posso ajudar?</h2>
-            <p>Peça um roteiro, revisão ou ideia de conteúdo</p>
-            <div className="chat-suggestions">
-              {SUGGESTIONS.map(s => (
-                <button key={s} className="chat-chip" onClick={() => sendSuggestion(s)}>{s}</button>
-              ))}
-            </div>
+            <p>Descreva o que precisa e eu crio para você</p>
           </div>
         )}
         {chatHistory.map(msg => (
@@ -131,7 +85,7 @@ export default function ChatPanel({ editorRef }) {
         ))}
       </div>
 
-      {/* Context bar: PubMed + Notion + Lousa */}
+      {/* Context bar */}
       <div className="chat-output-bar">
         <button className="btn-ghost pubmed-trigger" onClick={openPubMed}>
           🔬 PubMed
@@ -148,8 +102,11 @@ export default function ChatPanel({ editorRef }) {
           <button className="btn-ghost pubmed-clear" onClick={clearNotionStyles} title="Limpar estilo">✕</button>
         )}
 
-        {/* Insert to canvas + toggle canvas */}
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
+          <label className="rag-toggle-mini" title="Base RAG ativa">
+            <input type="checkbox" checked={useRag} onChange={e => setUseRag(e.target.checked)} />
+            <span className="rag-toggle-label">{useRag ? '📚' : '💭'}</span>
+          </label>
           {editorVisible && (
             <button className="btn-ghost" onClick={insertLastMsg}>+ Inserir</button>
           )}
@@ -165,7 +122,6 @@ export default function ChatPanel({ editorRef }) {
 
       {/* Chat input */}
       <div className="chat-bottom">
-        {/* Selection indicator */}
         {canvasSelection && (
           <div className="selection-indicator">
             <span className="selection-indicator-icon">✂</span>
@@ -182,7 +138,7 @@ export default function ChatPanel({ editorRef }) {
             onChange={e => setText(e.target.value)}
             onKeyDown={handleKey}
             onInput={autoResize}
-            placeholder="Sua instrução…"
+            placeholder={canvasSelection ? 'Como quer reescrever este trecho…' : 'Sua instrução…'}
             rows={1}
             disabled={isStreaming}
           />
@@ -200,39 +156,11 @@ export default function ChatPanel({ editorRef }) {
             )}
           </button>
         </div>
-
-        <details className="chat-settings">
-          <summary>Ajustes Artísticos e IA ▼</summary>
-          <div className="chat-settings-body">
-            <div className="chat-settings-row">
-              <div className="chat-field">
-                <label>Tom</label>
-                <select value={tone} onChange={e => setTone(e.target.value)}>
-                  {TONES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <div className="chat-field">
-                <label>Duração</label>
-                <select value={duration} onChange={e => setDuration(Number(e.target.value))}>
-                  {DURATIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="chat-toggle-row">
-              <span>Base RAG (contexto clínico)</span>
-              <label className="toggle-switch">
-                <input type="checkbox" checked={useRag} onChange={e => setUseRag(e.target.checked)} />
-                <span className="toggle-track" />
-                <span className="toggle-thumb" />
-              </label>
-            </div>
-          </div>
-        </details>
       </div>
 
       {/* Footer */}
       <div className="chat-panel-footer">
-        <button onClick={openSettings}>⚙ Configurações avançadas (API / OpenRouter)</button>
+        <button onClick={openSettings}>⚙ Configurações</button>
       </div>
     </div>
   );
